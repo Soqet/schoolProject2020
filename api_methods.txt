@@ -1,0 +1,57 @@
+(arg0, arg1, ...) -> success | fail
+
+
+
+auth:
+  auth.registration:
+    (email, password, username, name) -> 0 | error descritpion
+
+  auth.gettoken:
+    (email, password) -> token | error
+
+user:
+  user.changename:
+    (token, current name, new name) -> new name | error
+
+  user.changepassword:
+    (token, current password, new password) -> new token | error
+
+  user.getname:
+    (username) -> name | error
+
+  user.getblocked:
+    (token) -> usernames | error
+
+  user.getdialogues:
+    (token) -> usernames | error
+  
+  user.block:
+    (token, other's username) -> other's username | error
+    descritpion: добавляет в черный список пользователя
+
+
+messages:
+  messages.send:
+    (token, username of receiver, random number) -> 0 | error
+    descritpion: random number уникальное число для каждого сообщения, сообщение с уже использованым 
+      номером не будет отправлено. это сделано для защиты от отправки одинаковых сообщений.
+
+  messages.getunread:
+    (token) -> json of messages | error
+    descritpion: получение всех непрочитанных сообщений
+
+  messages.getlastmessages:
+    (token, other's username, number of messages) -> json of messages | error
+    descritpion: получение последних n сообщений с каким-то юзером
+
+  messages.getlastMessage:
+    (token, other's username, number of messages) -> message | error
+    descritpion: получение последнего сообщения с юзером
+
+    messages.markasread:
+      (token, other's username) -> 0 | error
+      descritpion: помечает все сообщения с юзером прочитанными
+
+    messages.deletehistory:
+      (token, other's username) -> 0 | error
+      descritpion: удаляет переписку с юзером (для обоих)
