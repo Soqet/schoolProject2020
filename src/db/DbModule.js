@@ -66,6 +66,7 @@ var Errors_1 = require("../Errors");
 //models start
 var userModel_1 = __importDefault(require("./models/userModel"));
 var tokenModel_1 = __importDefault(require("./models/tokenModel"));
+var messagesModel_1 = __importDefault(require("./models/messagesModel"));
 var conversationModel_1 = __importDefault(require("./models/conversationModel"));
 var mongodb_1 = require("mongodb");
 //models end
@@ -73,7 +74,6 @@ var Scope_1 = __importStar(require("./Scope"));
 var ObjectId = mongoose_1.default.Types.ObjectId;
 /////
 /////
-var uri = "mongodb+srv://root:root@cluster0.alpf7.mongodb.net/test?retryWrites=true&w=majority";
 var newUser = new userModel_1.default({
     _id: new ObjectId(),
     email: 'qwe',
@@ -417,6 +417,56 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
+    DbModule.prototype.getMessagesByUser = function (user) {
+        return __awaiter(this, void 0, void 0, function () {
+            var result, messagesDocument;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.find(messagesModel_1.default, { fromId: user.toObject()._id })];
+                    case 1:
+                        result = (_a.sent())[0];
+                        if (!(result == null)) return [3 /*break*/, 3];
+                        messagesDocument = new messagesModel_1.default({
+                            fromId: user.toObject()._id,
+                            histories: []
+                        });
+                        result = messagesDocument;
+                        return [4 /*yield*/, this.save(messagesDocument)];
+                    case 2:
+                        _a.sent();
+                        _a.label = 3;
+                    case 3: return [2 /*return*/, result];
+                }
+            });
+        });
+    };
+    DbModule.prototype.sendMessage = function (user, toUsername, content) {
+        return __awaiter(this, void 0, void 0, function () {
+            var messages, _a, _b;
+            var _c, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0: return [4 /*yield*/, this.getMessagesByUser(user)];
+                    case 1:
+                        messages = _e.sent();
+                        _b = (_a = conversationModel_1.default).updateOne;
+                        _c = {
+                            'fromId': user.toObject()._id
+                        };
+                        _d = {};
+                        return [4 /*yield*/, this.getUserByUsername(toUsername)];
+                    case 2: return [4 /*yield*/, _b.apply(_a, [(_c.histories = (_d.toId = (_e.sent()).toObject()._id,
+                                _d),
+                                _c), { $push: { histories: { messages: content } }
+                            }])];
+                    case 3:
+                        _e.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    //async getMessages
     DbModule.prototype.changeId = function (model, document) {
         return __awaiter(this, void 0, void 0, function () {
             var newObject, newDocument;
@@ -464,26 +514,29 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.blockUser = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
-            var conversations, _a, _b, _c;
-            var _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var conversations, _a, _b, _c, error_1;
+            var _d, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
-                        conversations = _e.sent();
+                        conversations = _f.sent();
+                        _f.label = 2;
+                    case 2:
+                        _f.trys.push([2, 5, , 6]);
                         _b = (_a = conversationModel_1.default).updateOne;
                         _c = [{ '_id': conversations.toObject()._id }];
                         _d = {};
+                        _e = {};
                         return [4 /*yield*/, this.getUserByUsername(username)];
-                    case 2: 
-                    //let conversationObject = conversations.toObject();
-                    //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
-                    return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.sent()).toObject()._id, _d)]))];
-                    case 3:
-                        //let conversationObject = conversations.toObject();
-                        //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
-                        _e.sent();
-                        return [2 /*return*/];
+                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.blocked = (_f.sent()).toObject()._id, _e), _d)]))];
+                    case 4:
+                        _f.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        error_1 = _f.sent();
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
                 }
             });
         });
@@ -509,54 +562,70 @@ var DbModule = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
                         conversations = _a.sent();
-                        return [2 /*return*/, conversations.toObject().blocked];
+                        return [2 /*return*/, conversations.toObject().dialogues];
                 }
             });
         });
     };
     DbModule.prototype.deleteDialogue = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/];
+            var conversations, _a, _b, _c, error_2;
+            var _d, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
+                    case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
+                    case 1:
+                        conversations = _f.sent();
+                        _f.label = 2;
+                    case 2:
+                        _f.trys.push([2, 5, , 6]);
+                        _b = (_a = conversationModel_1.default).updateOne;
+                        _c = [{ '_id': conversations.toObject()._id }];
+                        _d = {};
+                        _e = {};
+                        return [4 /*yield*/, this.getUserByUsername(username)];
+                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$pull = (_e.dialogues = (_f.sent()).toObject()._id, _e), _d)]))];
+                    case 4:
+                        _f.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        error_2 = _f.sent();
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
+                }
             });
         });
     };
     DbModule.prototype.addNewDialogue = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/];
+            var conversations, _a, _b, _c, error_3;
+            var _d, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
+                    case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
+                    case 1:
+                        conversations = _f.sent();
+                        _f.label = 2;
+                    case 2:
+                        _f.trys.push([2, 5, , 6]);
+                        _b = (_a = conversationModel_1.default).updateOne;
+                        _c = [{ '_id': conversations.toObject()._id }];
+                        _d = {};
+                        _e = {};
+                        return [4 /*yield*/, this.getUserByUsername(username)];
+                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.dialogues = (_f.sent()).toObject()._id, _e), _d)]))];
+                    case 4:
+                        _f.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        error_3 = _f.sent();
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
+                }
             });
         });
     };
     return DbModule;
 }());
 exports.default = DbModule;
-function testing() {
-    return __awaiter(this, void 0, void 0, function () {
-        var test, _a, _b;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
-                case 0:
-                    test = new DbModule(uri);
-                    return [4 /*yield*/, test.setup()];
-                case 1:
-                    _c.sent();
-                    return [4 /*yield*/, test.save(newUser)];
-                case 2:
-                    _c.sent();
-                    //console.log(newUser._id);
-                    //test.findById(userModel, newUser._id);
-                    _b = (_a = console).log;
-                    return [4 /*yield*/, test.findById(userModel_1.default, newUser._id)];
-                case 3:
-                    //console.log(newUser._id);
-                    //test.findById(userModel, newUser._id);
-                    _b.apply(_a, [_c.sent()]);
-                    console.log();
-                    return [2 /*return*/];
-            }
-        });
-    });
-}
-//testing2();
 //# sourceMappingURL=DbModule.js.map

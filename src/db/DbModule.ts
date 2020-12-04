@@ -250,7 +250,7 @@ export default class DbModule {
 
   async getDialogues(user: mongoose.Document) {
     let conversations  = await this.getConversationsByUser(user);
-    return conversations.toObject().blocked;
+    return conversations.toObject().dialogues;
 
   }
 

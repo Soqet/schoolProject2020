@@ -9,7 +9,8 @@ var userSchema = new mongoose_1.default.Schema({
     user: {
         type: ObjectId,
         ref: 'user',
-        required: true
+        required: true,
+        unique: true
     },
     dialogues: [
         {

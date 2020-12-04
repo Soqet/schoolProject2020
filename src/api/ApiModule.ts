@@ -19,8 +19,16 @@ import {
   DbValueError,
   ScopeError 
 } from '../Errors';
+import {
+  IResponse,
+  Response,
+  responseTypes
+} from './Response'
 
-let ObjectId = mongoose.Types.ObjectId;
+const ObjectId = mongoose.Types.ObjectId;
+const successMessage = 'success';
+
+
 
 function loggerMiddleware(request: express.Request, response: express.Response, next: any) {
   console.log(`${request.method} ${request.path}`);
@@ -162,159 +170,186 @@ export default class ApiModule{
   }
 
   async authGetToken(email: string, password: string) {
+    let response;
     try {
       const user = (await this.dbModule.getUserByEmail(email));
       if (!(await this.dbModule.checkPassword(user, password))) throw Error( 'Incorrect password.');
-      const token = await this.dbModule.createToken(user);
-      return token;
+      const data = await this.dbModule.createToken(user);
+      response = Response.fromSuccessData(data);
     }catch(error) {
       console.log(error);
-
-      return 'Error';
+      response = Response.fromError(error);
     }
+    return response;
   }
   
   async authRegister(email: string, password: string, username: string, name: string) {
+    let response: Response;
     try {
-      await await this.dbModule.createNewUser(email, password, username, name);
-      return '0';
+      await this.dbModule.createNewUser(email, password, username, name);
+      response = Response.fromSuccessData();
     }catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   async messagesSend(token: string, username: string, content: string) {
+    let response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.send')) throw new ScopeError('Check token scope.');
-      let result = this.dbModule.sendMessage(await this.dbModule.getUserByToken(token), username, content);
-      return String(result);
+      let message = await this.dbModule.sendMessage(await this.dbModule.getUserByToken(token), username, content);
+      response = Response.fromSuccessData();
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error.message);
     }
+    return response;
   }
   
   async messagesGetUnread(token: string) {
+    let response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.getunread')) throw new ScopeError('Check token scope.');
-      let result;
-      return String(result);
+      response = Response.fromSuccessData()
     } catch(error) {
       console.log(error);
       return String(error.message);
     }
+    return response;
   } 
 
   async messagesGetLastMessages(token: string, username: string, numberOfMessagesString: string) {
+    let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.getlastmessages')) throw new ScopeError('Check token scope.');
       const numberofmessages = parseInt(numberOfMessagesString);
       if(!!numberOfMessagesString) throw new Error('Wrong number of messges.');
-      let result;
-      return String(result);
+      let result = '';
+      response = Response.fromSuccessData();
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   async messagesGetLastMessage(token: string, username: string) {
+    let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.getlasmessage')) throw new ScopeError('Check token scope.');
-      let result;
-      return String(result);
+      let result = successMessage; // function here
+      response = Response.fromSuccessData();
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   async messagesMarkAsRead(token: string, username: string) {
+    let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.markasread')) throw new ScopeError('Check token scope.');
-      let result;
-      return String(result);
+      let result = successMessage; //function here
+      response = Response.fromSuccessData();
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
   
   async messagesDeleteHistory(token: string, username: string) {
+    let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.deletehistory')) throw new ScopeError('Check token scope.');
-      let result;
+      let result = successMessage; //function here
+      response = Response.fromSuccessData();
       return String(result);
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   async userGetName(username: string) {
+    let response: Response;
     try {
       const result = await this.dbModule.getUserByUsername(username);
-      return String(result.toObject().name);
+      response = Response.fromSuccessData(result.toObject().name);
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   async userGetBlocked(token: string) {
+    let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'user.getblocked')) throw new ScopeError('Check token scope.');
       const result = await this.dbModule.getBlocked(await this.dbModule.getUserByToken(token));
-      return String(result);
+      response = Response.fromSuccessData();
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   async userGetDialogues(token: string) {
+    let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'user.getdialogues')) throw new ScopeError('Check token scope.');
-      const result = await this.dbModule.getBlocked(await this.dbModule.getUserByToken(token));
-      return String(result);
+      const data = await this.dbModule.getDialogues(await this.dbModule.getUserByToken(token));
+      response = Response.fromSuccessData(data);
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   async userChangeName(token: string, currentName: string, newName: string) {
+    let response: Response;
     try{  
       if(!this.dbModule.checkStringToken(token, 'user.changename')) throw new ScopeError('Check token scope.');
-      let result = await this.dbModule.changeNameSafe(token, currentName, newName);
-      return result;
+      const data = await this.dbModule.changeNameSafe(token, currentName, newName);
+      response = Response.fromSuccessData(data);
     } catch(error) {
       console.log(error)
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 
   
   async userChangePassword(token: string, currentPassword: string, newPassword: string) {
+    let response: Response;
     try{
       if(!this.dbModule.checkStringToken(token, 'user.changepassword')) throw new ScopeError('Check token scope.');
-      let result = await this.dbModule.changePasswordSafe(token, currentPassword, newPassword);
-      return result;
+      const data = await this.dbModule.changePasswordSafe(token, currentPassword, newPassword);
+      response = Response.fromSuccessData(data);
     } catch(error) {
       console.log(error)
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
     
   async userBlock(token: string, username: string) {
+    let response: Response;
     try{  
       if(!this.dbModule.checkStringToken(token, 'user.block')) throw new ScopeError('Check token scope.');
-      let result = await this.dbModule.blockUser(await this.dbModule.getUserByToken(token), username);
-      return result;
+      const data = await this.dbModule.blockUser(await this.dbModule.getUserByToken(token), username);
+      response = Response.fromSuccessData(data);
     } catch(error) {
       console.log(error)
-      return String(error.message);
+      response = Response.fromError(error);
     }
+    return response;
   }
 }

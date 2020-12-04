@@ -44,7 +44,9 @@ require("dotenv/config");
 //modles end
 var mongoose_1 = __importDefault(require("mongoose"));
 var Errors_1 = require("../Errors");
+var Response_1 = require("./Response");
 var ObjectId = mongoose_1.default.Types.ObjectId;
+var successMessage = 'success';
 function loggerMiddleware(request, response, next) {
     console.log(request.method + " " + request.path);
     next();
@@ -127,7 +129,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesGetLastMessages(request.query['token'], request.query['username'])];
+                                    case 0: return [4 /*yield*/, this.messagesGetLastMessages(request.query['token'], request.query['username'], request.query['numberofmessages'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -242,7 +244,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.authGetToken = function (email, password) {
         return __awaiter(this, void 0, void 0, function () {
-            var user, token, error_1;
+            var response, user, data, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -253,86 +255,166 @@ var ApiModule = /** @class */ (function () {
                         return [4 /*yield*/, this.dbModule.checkPassword(user, password)];
                     case 2:
                         if (!(_a.sent()))
-                            return [2 /*return*/, 'Incorrect password.'];
+                            throw Error('Incorrect password.');
                         return [4 /*yield*/, this.dbModule.createToken(user)];
                     case 3:
-                        token = _a.sent();
-                        return [2 /*return*/, token];
+                        data = _a.sent();
+                        response = Response_1.Response.fromSuccessData(data);
+                        return [3 /*break*/, 5];
                     case 4:
                         error_1 = _a.sent();
                         console.log(error_1);
-                        return [2 /*return*/, 'Error'];
-                    case 5: return [2 /*return*/];
+                        response = Response_1.Response.fromError(error_1);
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/, response];
                 }
             });
         });
     };
     ApiModule.prototype.authRegister = function (email, password, username, name) {
         return __awaiter(this, void 0, void 0, function () {
-            var error_2;
+            var response, error_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 3, , 4]);
+                        _a.trys.push([0, 2, , 3]);
                         return [4 /*yield*/, this.dbModule.createNewUser(email, password, username, name)];
-                    case 1: return [4 /*yield*/, _a.sent()];
-                    case 2:
+                    case 1:
                         _a.sent();
-                        return [2 /*return*/, '0'];
-                    case 3:
+                        response = Response_1.Response.fromSuccessData();
+                        return [3 /*break*/, 3];
+                    case 2:
                         error_2 = _a.sent();
                         console.log(error_2);
-                        return [2 /*return*/, String(error_2.message)];
-                    case 4: return [2 /*return*/];
+                        response = Response_1.Response.fromError(error_2);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/, response];
                 }
             });
         });
     };
-    ApiModule.prototype.messagesSend = function (token, username, randomNumber) {
+    ApiModule.prototype.messagesSend = function (token, username, content) {
         return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/];
+            var response, message, _a, _b, error_3;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _c.trys.push([0, 3, , 4]);
+                        if (!this.dbModule.checkStringToken(token, 'messages.send'))
+                            throw new Errors_1.ScopeError('Check token scope.');
+                        _b = (_a = this.dbModule).sendMessage;
+                        return [4 /*yield*/, this.dbModule.getUserByToken(token)];
+                    case 1: return [4 /*yield*/, _b.apply(_a, [_c.sent(), username, content])];
+                    case 2:
+                        message = _c.sent();
+                        response = Response_1.Response.fromSuccessData();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_3 = _c.sent();
+                        console.log(error_3);
+                        response = Response_1.Response.fromError(error_3.message);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/, response];
+                }
             });
         });
     };
     ApiModule.prototype.messagesGetUnread = function (token) {
         return __awaiter(this, void 0, void 0, function () {
+            var response;
             return __generator(this, function (_a) {
-                return [2 /*return*/];
+                try {
+                    if (!this.dbModule.checkStringToken(token, 'messages.getunread'))
+                        throw new Errors_1.ScopeError('Check token scope.');
+                    response = Response_1.Response.fromSuccessData();
+                }
+                catch (error) {
+                    console.log(error);
+                    return [2 /*return*/, String(error.message)];
+                }
+                return [2 /*return*/, response];
             });
         });
     };
-    ApiModule.prototype.messagesGetLastMessages = function (token, username) {
+    ApiModule.prototype.messagesGetLastMessages = function (token, username, numberOfMessagesString) {
         return __awaiter(this, void 0, void 0, function () {
+            var response, numberofmessages, result;
             return __generator(this, function (_a) {
-                return [2 /*return*/];
+                try {
+                    if (!this.dbModule.checkStringToken(token, 'messages.getlastmessages'))
+                        throw new Errors_1.ScopeError('Check token scope.');
+                    numberofmessages = parseInt(numberOfMessagesString);
+                    if (!!numberOfMessagesString)
+                        throw new Error('Wrong number of messges.');
+                    result = '';
+                    response = Response_1.Response.fromSuccessData();
+                }
+                catch (error) {
+                    console.log(error);
+                    response = Response_1.Response.fromError(error);
+                }
+                return [2 /*return*/, response];
             });
         });
     };
     ApiModule.prototype.messagesGetLastMessage = function (token, username) {
         return __awaiter(this, void 0, void 0, function () {
+            var response, result;
             return __generator(this, function (_a) {
-                return [2 /*return*/];
+                try {
+                    if (!this.dbModule.checkStringToken(token, 'messages.getlasmessage'))
+                        throw new Errors_1.ScopeError('Check token scope.');
+                    result = successMessage;
+                    response = Response_1.Response.fromSuccessData();
+                }
+                catch (error) {
+                    console.log(error);
+                    response = Response_1.Response.fromError(error);
+                }
+                return [2 /*return*/, response];
             });
         });
     };
     ApiModule.prototype.messagesMarkAsRead = function (token, username) {
         return __awaiter(this, void 0, void 0, function () {
+            var response, result;
             return __generator(this, function (_a) {
-                return [2 /*return*/];
+                try {
+                    if (!this.dbModule.checkStringToken(token, 'messages.markasread'))
+                        throw new Errors_1.ScopeError('Check token scope.');
+                    result = successMessage;
+                    response = Response_1.Response.fromSuccessData();
+                }
+                catch (error) {
+                    console.log(error);
+                    response = Response_1.Response.fromError(error);
+                }
+                return [2 /*return*/, response];
             });
         });
     };
     ApiModule.prototype.messagesDeleteHistory = function (token, username) {
         return __awaiter(this, void 0, void 0, function () {
+            var response, result;
             return __generator(this, function (_a) {
-                return [2 /*return*/];
+                try {
+                    if (!this.dbModule.checkStringToken(token, 'messages.deletehistory'))
+                        throw new Errors_1.ScopeError('Check token scope.');
+                    result = successMessage;
+                    response = Response_1.Response.fromSuccessData();
+                    return [2 /*return*/, String(result)];
+                }
+                catch (error) {
+                    console.log(error);
+                    response = Response_1.Response.fromError(error);
+                }
+                return [2 /*return*/, response];
             });
         });
     };
     ApiModule.prototype.userGetName = function (username) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, error_3;
+            var response, result, error_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -340,19 +422,21 @@ var ApiModule = /** @class */ (function () {
                         return [4 /*yield*/, this.dbModule.getUserByUsername(username)];
                     case 1:
                         result = _a.sent();
-                        return [2 /*return*/, String(result.toObject().name)];
+                        response = Response_1.Response.fromSuccessData(result.toObject().name);
+                        return [3 /*break*/, 3];
                     case 2:
-                        error_3 = _a.sent();
-                        console.log(error_3);
-                        return [2 /*return*/, String(error_3.message)];
-                    case 3: return [2 /*return*/];
+                        error_4 = _a.sent();
+                        console.log(error_4);
+                        response = Response_1.Response.fromError(error_4);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/, response];
                 }
             });
         });
     };
     ApiModule.prototype.userGetBlocked = function (token) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, _a, _b, error_4;
+            var response, result, _a, _b, error_5;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -364,43 +448,47 @@ var ApiModule = /** @class */ (function () {
                     case 1: return [4 /*yield*/, _b.apply(_a, [_c.sent()])];
                     case 2:
                         result = _c.sent();
-                        return [2 /*return*/, String(result)];
+                        response = Response_1.Response.fromSuccessData();
+                        return [3 /*break*/, 4];
                     case 3:
-                        error_4 = _c.sent();
-                        console.log(error_4);
-                        return [2 /*return*/, String(error_4.message)];
-                    case 4: return [2 /*return*/];
+                        error_5 = _c.sent();
+                        console.log(error_5);
+                        response = Response_1.Response.fromError(error_5);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/, response];
                 }
             });
         });
     };
     ApiModule.prototype.userGetDialogues = function (token) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, _a, _b, error_5;
+            var response, data, _a, _b, error_6;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         _c.trys.push([0, 3, , 4]);
                         if (!this.dbModule.checkStringToken(token, 'user.getdialogues'))
                             throw new Errors_1.ScopeError('Check token scope.');
-                        _b = (_a = this.dbModule).getBlocked;
+                        _b = (_a = this.dbModule).getDialogues;
                         return [4 /*yield*/, this.dbModule.getUserByToken(token)];
                     case 1: return [4 /*yield*/, _b.apply(_a, [_c.sent()])];
                     case 2:
-                        result = _c.sent();
-                        return [2 /*return*/, String(result)];
+                        data = _c.sent();
+                        response = Response_1.Response.fromSuccessData(data);
+                        return [3 /*break*/, 4];
                     case 3:
-                        error_5 = _c.sent();
-                        console.log(error_5);
-                        return [2 /*return*/, String(error_5.message)];
-                    case 4: return [2 /*return*/];
+                        error_6 = _c.sent();
+                        console.log(error_6);
+                        response = Response_1.Response.fromError(error_6);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/, response];
                 }
             });
         });
     };
     ApiModule.prototype.userChangeName = function (token, currentName, newName) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, error_6;
+            var response, data, error_7;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -409,20 +497,22 @@ var ApiModule = /** @class */ (function () {
                             throw new Errors_1.ScopeError('Check token scope.');
                         return [4 /*yield*/, this.dbModule.changeNameSafe(token, currentName, newName)];
                     case 1:
-                        result = _a.sent();
-                        return [2 /*return*/, result];
+                        data = _a.sent();
+                        response = Response_1.Response.fromSuccessData(data);
+                        return [3 /*break*/, 3];
                     case 2:
-                        error_6 = _a.sent();
-                        console.log(error_6);
-                        return [2 /*return*/, String(error_6.message)];
-                    case 3: return [2 /*return*/];
+                        error_7 = _a.sent();
+                        console.log(error_7);
+                        response = Response_1.Response.fromError(error_7);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/, response];
                 }
             });
         });
     };
     ApiModule.prototype.userChangePassword = function (token, currentPassword, newPassword) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, error_7;
+            var response, data, error_8;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -431,18 +521,44 @@ var ApiModule = /** @class */ (function () {
                             throw new Errors_1.ScopeError('Check token scope.');
                         return [4 /*yield*/, this.dbModule.changePasswordSafe(token, currentPassword, newPassword)];
                     case 1:
-                        result = _a.sent();
-                        return [2 /*return*/, result];
+                        data = _a.sent();
+                        response = Response_1.Response.fromSuccessData(data);
+                        return [3 /*break*/, 3];
                     case 2:
-                        error_7 = _a.sent();
-                        console.log(error_7);
-                        return [2 /*return*/, String(error_7.message)];
-                    case 3: return [2 /*return*/];
+                        error_8 = _a.sent();
+                        console.log(error_8);
+                        response = Response_1.Response.fromError(error_8);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/, response];
                 }
             });
         });
     };
     ApiModule.prototype.userBlock = function (token, username) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response, data, _a, _b, error_9;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _c.trys.push([0, 3, , 4]);
+                        if (!this.dbModule.checkStringToken(token, 'user.block'))
+                            throw new Errors_1.ScopeError('Check token scope.');
+                        _b = (_a = this.dbModule).blockUser;
+                        return [4 /*yield*/, this.dbModule.getUserByToken(token)];
+                    case 1: return [4 /*yield*/, _b.apply(_a, [_c.sent(), username])];
+                    case 2:
+                        data = _c.sent();
+                        response = Response_1.Response.fromSuccessData(data);
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_9 = _c.sent();
+                        console.log(error_9);
+                        response = Response_1.Response.fromError(error_9);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/, response];
+                }
+            });
+        });
     };
     return ApiModule;
 }());

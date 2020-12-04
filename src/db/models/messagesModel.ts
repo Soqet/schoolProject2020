@@ -8,18 +8,26 @@ let messagesSchema = new mongoose.Schema({
     ref: 'user', 
     required: true
   },
-  histories: [ 
-  {
+  histories: [
+    {
     toId: {
       type: ObjectId,
       ref: 'user',
       required: true
     },
-    messages : [
-      {
+    messages : [{
+      content: {
         type: String
+      },
+      date: {
+        type: String,
+        required: true
+      },
+      unread: {
+        type: Boolean,
+        required: true
       }
-    ],
+    }],
     unread: {
       type: Boolean,
       required: true
