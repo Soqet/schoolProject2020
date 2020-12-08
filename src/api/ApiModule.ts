@@ -24,6 +24,7 @@ import {
   Response,
   responseTypes
 } from './Response'
+import Scope from '../db/Scope';
 
 const ObjectId = mongoose.Types.ObjectId;
 const successMessage = 'success';
@@ -64,7 +65,9 @@ export default class ApiModule{
     this.app.post('/auth.gettoken', async (request, response) =>{
       let result = await this.authGetToken(
         request.query['email'] as string, 
-        request.query['password'] as string
+        request.query['password'] as string,
+        request.query['scope'] as string,
+        request.query['expiresin'] as string
       );
       response.send(result);
     });
@@ -139,7 +142,7 @@ export default class ApiModule{
       let result = await this.messagesSend(
         request.query['token'] as string, 
         request.query['username'] as string,
-        request.query['randomnumber'] as string
+        request.query['content'] as string
       );
       response.send(result);
     });
@@ -169,12 +172,12 @@ export default class ApiModule{
     await this.dbModule.setup();
   }
 
-  async authGetToken(email: string, password: string) {
+  async authGetToken(email: string, password: string, scope: string, expiresIn: string) {
     let response;
     try {
       const user = (await this.dbModule.getUserByEmail(email));
       if (!(await this.dbModule.checkPassword(user, password))) throw Error( 'Incorrect password.');
-      const data = await this.dbModule.createToken(user);
+      const data = await this.dbModule.createToken(user, new Scope(parseInt(scope)), parseInt(expiresIn));
       response = Response.fromSuccessData(data);
     }catch(error) {
       console.log(error);

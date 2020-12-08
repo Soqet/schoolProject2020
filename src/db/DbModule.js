@@ -72,16 +72,6 @@ var mongodb_1 = require("mongodb");
 //models end
 var Scope_1 = __importStar(require("./Scope"));
 var ObjectId = mongoose_1.default.Types.ObjectId;
-/////
-/////
-var newUser = new userModel_1.default({
-    _id: new ObjectId(),
-    email: 'qwe',
-    passwordHash: 'asd',
-    username: 'zxc',
-    name: '123'
-});
-//newUser.save();
 var DbModule = /** @class */ (function () {
     function DbModule(uri) {
         this.dbBuffer = new DbBuffer_1.default();
@@ -392,7 +382,7 @@ var DbModule = /** @class */ (function () {
                     case 0:
                         _a = this.checkToken;
                         return [4 /*yield*/, this.getToken(token)];
-                    case 1: return [2 /*return*/, _a.apply(this, [_b.sent()])];
+                    case 1: return [2 /*return*/, _a.apply(this, [_b.sent(), methodName])];
                 }
             });
         });
@@ -427,6 +417,7 @@ var DbModule = /** @class */ (function () {
                         result = (_a.sent())[0];
                         if (!(result == null)) return [3 /*break*/, 3];
                         messagesDocument = new messagesModel_1.default({
+                            _id: new mongodb_1.ObjectID(),
                             fromId: user.toObject()._id,
                             histories: []
                         });
@@ -442,31 +433,53 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.sendMessage = function (user, toUsername, content) {
         return __awaiter(this, void 0, void 0, function () {
-            var messages, _a, _b;
-            var _c, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            var messages, toUserId, _a, message, updateUnread;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.getMessagesByUser(user)];
                     case 1:
-                        messages = _e.sent();
-                        _b = (_a = conversationModel_1.default).updateOne;
-                        _c = {
-                            'fromId': user.toObject()._id
-                        };
-                        _d = {};
+                        messages = _b.sent();
+                        _a = String;
                         return [4 /*yield*/, this.getUserByUsername(toUsername)];
-                    case 2: return [4 /*yield*/, _b.apply(_a, [(_c.histories = (_d.toId = (_e.sent()).toObject()._id,
-                                _d),
-                                _c), { $push: { histories: { messages: content } }
-                            }])];
+                    case 2:
+                        toUserId = _a.apply(void 0, [(_b.sent()).toObject()._id]);
+                        message = {};
+                        message["histories." + toUserId + ".messages"] = {
+                            content: content,
+                            date: Date.now().toString(),
+                            unread: true
+                        };
+                        return [4 /*yield*/, messagesModel_1.default.updateOne({
+                                'fromId': user.toObject()._id
+                            }, { $push: message })];
                     case 3:
-                        _e.sent();
+                        _b.sent();
+                        updateUnread = {};
+                        updateUnread["histories." + toUserId + ".unread"] = true;
+                        return [4 /*yield*/, messagesModel_1.default.updateOne({
+                                'fromId': user.toObject()._id
+                            }, updateUnread)];
+                    case 4:
+                        _b.sent();
                         return [2 /*return*/];
                 }
             });
         });
     };
-    //async getMessages
+    DbModule.prototype.getMessages = function (user, toUserId, amount) {
+        return __awaiter(this, void 0, void 0, function () {
+            var messages, result;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getMessagesByUser(user)];
+                    case 1:
+                        messages = (_a.sent());
+                        result = new Array();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
     DbModule.prototype.changeId = function (model, document) {
         return __awaiter(this, void 0, void 0, function () {
             var newObject, newDocument;

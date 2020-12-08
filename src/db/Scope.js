@@ -30,8 +30,8 @@ var Scope = /** @class */ (function () {
             { methodName: 'user.changename', methodScope: ScopeBytes.changeInfo },
             { methodName: 'user.changepassword', methodScope: ScopeBytes.changeInfo },
             { methodName: 'messages.send', methodScope: ScopeBytes.sendMessages },
-            { methodName: 'message.deletehistory', methodScope: ScopeBytes.sendMessages | ScopeBytes.readMessages },
-            { methodName: 'message.block', methodScope: ScopeBytes.sendMessages | ScopeBytes.readMessages },
+            { methodName: 'messages.deletehistory', methodScope: ScopeBytes.sendMessages | ScopeBytes.readMessages },
+            { methodName: 'messages.block', methodScope: ScopeBytes.sendMessages | ScopeBytes.readMessages },
             { methodName: 'messages.getunread', methodScope: ScopeBytes.readMessages },
             { methodName: 'messages.markasread', methodScope: ScopeBytes.readMessages },
             { methodName: 'messages.getlastmessages', methodScope: ScopeBytes.readMessages },
@@ -39,7 +39,12 @@ var Scope = /** @class */ (function () {
             { methodName: 'user.getblocked', methodScope: ScopeBytes.readMessages },
             { methodName: 'user.getdialogues', methodScope: ScopeBytes.readMessages }
         ];
-        this.scope = scope;
+        if (scope != undefined) {
+            this.scope = scope;
+        }
+        else {
+            this.scope = ScopeBytes.defaultScope;
+        }
     }
     Scope.prototype.checkMethod = function (methodName) {
         var _a;

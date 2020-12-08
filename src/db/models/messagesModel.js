@@ -12,13 +12,9 @@ var messagesSchema = new mongoose_1.default.Schema({
         ref: 'user',
         required: true
     },
-    histories: [
-        {
-            toId: {
-                type: ObjectId,
-                ref: 'user',
-                required: true
-            },
+    histories: {
+        type: Map,
+        of: {
             messages: [{
                     content: {
                         type: String
@@ -37,7 +33,7 @@ var messagesSchema = new mongoose_1.default.Schema({
                 required: true
             }
         }
-    ],
+    }
 });
 var messageModel = mongoose_1.default.model('message', messagesSchema);
 exports.default = messageModel;

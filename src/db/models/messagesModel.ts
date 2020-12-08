@@ -8,32 +8,28 @@ let messagesSchema = new mongoose.Schema({
     ref: 'user', 
     required: true
   },
-  histories: [
-    {
-    toId: {
-      type: ObjectId,
-      ref: 'user',
-      required: true
-    },
-    messages : [{
-      content: {
-        type: String
-      },
-      date: {
-        type: String,
-        required: true
-      },
+  histories: { // key: toId
+    type: Map,
+    of: {
+      messages : [{
+        content: {
+          type: String
+        },
+        date: {
+          type: String,
+          required: true
+        },
+        unread: {
+          type: Boolean,
+          required: true
+        }
+      }],
       unread: {
         type: Boolean,
         required: true
       }
-    }],
-    unread: {
-      type: Boolean,
-      required: true
     }
   }
-],
 });
 
 

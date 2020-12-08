@@ -45,6 +45,7 @@ require("dotenv/config");
 var mongoose_1 = __importDefault(require("mongoose"));
 var Errors_1 = require("../Errors");
 var Response_1 = require("./Response");
+var Scope_1 = __importDefault(require("../db/Scope"));
 var ObjectId = mongoose_1.default.Types.ObjectId;
 var successMessage = 'success';
 function loggerMiddleware(request, response, next) {
@@ -81,7 +82,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.authGetToken(request.query['email'], request.query['password'])];
+                                    case 0: return [4 /*yield*/, this.authGetToken(request.query['email'], request.query['password'], request.query['scope'], request.query['expiresin'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -189,7 +190,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesSend(request.query['token'], request.query['username'], request.query['randomnumber'])];
+                                    case 0: return [4 /*yield*/, this.messagesSend(request.query['token'], request.query['username'], request.query['content'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -242,7 +243,7 @@ var ApiModule = /** @class */ (function () {
             });
         });
     };
-    ApiModule.prototype.authGetToken = function (email, password) {
+    ApiModule.prototype.authGetToken = function (email, password, scope, expiresIn) {
         return __awaiter(this, void 0, void 0, function () {
             var response, user, data, error_1;
             return __generator(this, function (_a) {
@@ -256,7 +257,7 @@ var ApiModule = /** @class */ (function () {
                     case 2:
                         if (!(_a.sent()))
                             throw Error('Incorrect password.');
-                        return [4 /*yield*/, this.dbModule.createToken(user)];
+                        return [4 /*yield*/, this.dbModule.createToken(user, new Scope_1.default(parseInt(scope)), parseInt(expiresIn))];
                     case 3:
                         data = _a.sent();
                         response = Response_1.Response.fromSuccessData(data);

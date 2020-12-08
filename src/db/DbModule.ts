@@ -20,21 +20,21 @@ import conversationModel from './models/conversationModel';
 import { ObjectID } from "mongodb";
 //models end
 import Scope, { ScopeBytes } from './Scope'
+import { isMappedTypeNode } from "typescript";
 
 const ObjectId =  mongoose.Types.ObjectId;
 
-/////
-/////
 
+interface IQuery {
+  [key: string]: any,
+}
 
-let newUser = new userModel({
-  _id: new ObjectId(), 
-  email: 'qwe',
-  passwordHash: 'asd',
-  username: 'zxc',
-  name: '123'
-});
-//newUser.save();
+interface IMessage {
+  content: string,
+  date: string,
+  unread: boolean
+}
+
 
 export default class DbModule {
 
@@ -175,7 +175,7 @@ export default class DbModule {
   }
 
   async checkStringToken(token: string, methodName?: string) {
-    return this.checkToken(await this.getToken(token));
+    return this.checkToken(await this.getToken(token), methodName);
   } 
 
   async changeNameSafe(token: string, currentName: string, newName: string) {
@@ -193,6 +193,7 @@ export default class DbModule {
     let result = (await this.find(messagesModel, { fromId: user.toObject()._id }))[0];
     if(result == null) {
       let messagesDocument = new messagesModel( {
+        _id: new ObjectID(),
         fromId: user.toObject()._id,
         histories : []
       });
@@ -204,16 +205,66 @@ export default class DbModule {
 
   async sendMessage (user: mongoose.Document, toUsername: string, content: string) {
     let messages = await this.getMessagesByUser(user);
-    await conversationModel.updateOne({
+    let toUserId = String((await this.getUserByUsername(toUsername)).toObject()._id);
+    /* try {
+      await messagesModel.updateOne(
+        {
+          'fromId': user.toObject()._id, 
+        }, 
+        { $push: { histories:  { 
+          toId: (await this.getUserByUsername(toUsername)).toObject()._id,
+          messages: []
+        }}
+      });
+    } catch(error) { console.log(error) }
+    console.log(await messagesModel.findOne({
       'fromId': user.toObject()._id, 
       histories: {
-        toId: (await this.getUserByUsername(toUsername)).toObject()._id
-      }}, 
-      { $push: { histories:  { messages: content }}
-    });
+       toId: (await this.getUserByUsername(toUsername)).toObject()._id
+      }
+     }));*/
+    //if (messages.toObject().histories.) // WIP
+    // await messagesModel.updateOne(
+    //   {
+    //     'fromId': user.toObject()._id, 
+    //     histories: {
+    //      toId: (await this.getUserByUsername(toUsername)).toObject()._id
+    //     }
+    //   }, 
+    //   { $push: { histories:  { 
+    //     messages: {
+    //       content: content,
+    //       date: (new Date()).toString(),
+    //       unread: true
+    //     }
+    //   }}
+    var message: IQuery = {};
+    message[`histories.${toUserId}.messages`] = {
+        content: content,
+        date: Date.now().toString(),
+        unread: true
+    }
+    await messagesModel.updateOne({
+          'fromId': user.toObject()._id
+        }, 
+        { $push: message }
+    );
+    var updateUnread: IQuery = {};
+    updateUnread[`histories.${toUserId}.unread`] = true; 
+    
+    await messagesModel.updateOne({
+      'fromId': user.toObject()._id
+      }, 
+      updateUnread
+    );
   }
 
-  //async getMessages
+  async getMessages(user: mongoose.Document, toUserId: string , amount: number) { //WIP
+    let messages = (await this.getMessagesByUser(user));
+    var result = new Array<IMessage>();
+    
+
+  }
 
   async changeId(model: mongoose.Model<mongoose.Document, {}>, document: mongoose.Document) {
     let newObject = document.toObject()
