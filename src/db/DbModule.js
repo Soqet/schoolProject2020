@@ -431,6 +431,30 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
+    DbModule.prototype.getMessagesById = function (userId) {
+        return __awaiter(this, void 0, void 0, function () {
+            var result, messagesDocument;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.find(messagesModel_1.default, { fromId: userId })];
+                    case 1:
+                        result = (_a.sent())[0];
+                        if (!(result == null)) return [3 /*break*/, 3];
+                        messagesDocument = new messagesModel_1.default({
+                            _id: new mongodb_1.ObjectID(),
+                            fromId: userId,
+                            histories: []
+                        });
+                        result = messagesDocument;
+                        return [4 /*yield*/, this.save(messagesDocument)];
+                    case 2:
+                        _a.sent();
+                        _a.label = 3;
+                    case 3: return [2 /*return*/, result];
+                }
+            });
+        });
+    };
     DbModule.prototype.sendMessage = function (user, toUsername, content) {
         return __awaiter(this, void 0, void 0, function () {
             var messages, toUserId, _a, message, updateUnread;
@@ -466,15 +490,23 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
-    DbModule.prototype.getMessages = function (user, toUserId, amount) {
+    DbModule.prototype.getMessages = function (fromId, toId, amount) {
         return __awaiter(this, void 0, void 0, function () {
-            var messages, result;
+            var messages, result, findObject, rawResult;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getMessagesByUser(user)];
+                    case 0: return [4 /*yield*/, this.getMessagesById(fromId)];
                     case 1:
                         messages = (_a.sent());
                         result = new Array();
+                        findObject = {};
+                        findObject["histories." + toId] = { $slice: -amount };
+                        return [4 /*yield*/, messagesModel_1.default.findOne({ formId: fromId }, findObject)];
+                    case 2:
+                        rawResult = _a.sent();
+                        if (rawResult == null)
+                            throw new Errors_1.DbError(fromId + " is unknonwn user id.");
+                        result = rawResult.toObject();
                         return [2 /*return*/];
                 }
             });

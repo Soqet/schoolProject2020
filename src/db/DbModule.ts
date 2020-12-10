@@ -21,6 +21,7 @@ import { ObjectID } from "mongodb";
 //models end
 import Scope, { ScopeBytes } from './Scope'
 import { isMappedTypeNode } from "typescript";
+import { raw } from "body-parser";
 
 const ObjectId =  mongoose.Types.ObjectId;
 
@@ -29,7 +30,7 @@ interface IQuery {
   [key: string]: any,
 }
 
-interface IMessage {
+export interface IMessage {
   content: string,
   date: string,
   unread: boolean
@@ -203,6 +204,20 @@ export default class DbModule {
     return result;
   }
 
+  async getMessagesById(userId: string) {
+    let result = (await this.find(messagesModel, { fromId: userId }))[0];
+    if(result == null) {
+      let messagesDocument = new messagesModel( {
+        _id: new ObjectID(),
+        fromId: userId,
+        histories : []
+      });
+      result = messagesDocument;
+      await this.save(messagesDocument);
+    }
+    return result;
+  }
+
   async sendMessage (user: mongoose.Document, toUsername: string, content: string) {
     let messages = await this.getMessagesByUser(user);
     let toUserId = String((await this.getUserByUsername(toUsername)).toObject()._id);
@@ -259,10 +274,14 @@ export default class DbModule {
     );
   }
 
-  async getMessages(user: mongoose.Document, toUserId: string , amount: number) { //WIP
-    let messages = (await this.getMessagesByUser(user));
+  async getMessages(fromId: string, toId: string , amount: number) { //WIP
+    let messages = (await this.getMessagesById(fromId));
     var result = new Array<IMessage>();
-    
+    var findObject: IQuery = {};
+    findObject[`histories.${toId}`] = { $slice:  -amount }
+    var rawResult = await messagesModel.findOne({ formId: fromId }, findObject);
+    if (rawResult == null) throw new DbError(`${fromId} is unknonwn user id.`);
+    result = rawResult.toObject()
 
   }
 

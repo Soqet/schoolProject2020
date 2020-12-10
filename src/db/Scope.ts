@@ -72,8 +72,8 @@ export default class Scope {
   public scope: number;
 
   constructor(scope?: number) {
-    if(scope != undefined) {
-      this.scope = scope;
+    if(!!scope) {
+      this.scope = scope as number;
     } else {
       this.scope = ScopeBytes.defaultScope;
     }
@@ -86,5 +86,9 @@ export default class Scope {
     if(methodScope == undefined) throw new ScopeError('Unknown method.');
     return (methodScope & this.scope) == methodScope
   }
+
+ toString() {
+   return new String(this.scope);
+ }
 
 }

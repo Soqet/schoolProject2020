@@ -39,7 +39,7 @@ var Scope = /** @class */ (function () {
             { methodName: 'user.getblocked', methodScope: ScopeBytes.readMessages },
             { methodName: 'user.getdialogues', methodScope: ScopeBytes.readMessages }
         ];
-        if (scope != undefined) {
+        if (!!scope) {
             this.scope = scope;
         }
         else {
@@ -54,6 +54,9 @@ var Scope = /** @class */ (function () {
         if (methodScope == undefined)
             throw new Errors_1.ScopeError('Unknown method.');
         return (methodScope & this.scope) == methodScope;
+    };
+    Scope.prototype.toString = function () {
+        return new String(this.scope);
     };
     return Scope;
 }());

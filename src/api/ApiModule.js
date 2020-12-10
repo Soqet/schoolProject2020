@@ -245,7 +245,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.authGetToken = function (email, password, scope, expiresIn) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, user, data, error_1;
+            var response, user, intScope, intExpiresIn, data, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -257,7 +257,16 @@ var ApiModule = /** @class */ (function () {
                     case 2:
                         if (!(_a.sent()))
                             throw Error('Incorrect password.');
-                        return [4 /*yield*/, this.dbModule.createToken(user, new Scope_1.default(parseInt(scope)), parseInt(expiresIn))];
+                        intScope = new Scope_1.default(parseInt(scope));
+                        intExpiresIn = parseInt(expiresIn);
+                        if (!intScope) {
+                            intScope = undefined;
+                        }
+                        if (!intExpiresIn) {
+                            intExpiresIn = undefined;
+                        }
+                        console.log(scope, expiresIn, intExpiresIn, intScope);
+                        return [4 /*yield*/, this.dbModule.createToken(user, intScope, intExpiresIn)];
                     case 3:
                         data = _a.sent();
                         response = Response_1.Response.fromSuccessData(data);

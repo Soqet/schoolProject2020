@@ -177,7 +177,16 @@ export default class ApiModule{
     try {
       const user = (await this.dbModule.getUserByEmail(email));
       if (!(await this.dbModule.checkPassword(user, password))) throw Error( 'Incorrect password.');
-      const data = await this.dbModule.createToken(user, new Scope(parseInt(scope)), parseInt(expiresIn));
+      var intScope: undefined | Scope = new Scope(parseInt(scope));
+      var intExpiresIn: undefined | number = parseInt(expiresIn);
+      if (!intScope) {
+        intScope = undefined;
+      }
+      if (!intExpiresIn) {
+        intExpiresIn = undefined;
+      }
+      console.log(scope, expiresIn, intExpiresIn, intScope);
+      const data = await this.dbModule.createToken(user, intScope, intExpiresIn);
       response = Response.fromSuccessData(data);
     }catch(error) {
       console.log(error);
