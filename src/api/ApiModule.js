@@ -1,4 +1,23 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -46,6 +65,7 @@ var mongoose_1 = __importDefault(require("mongoose"));
 var Errors_1 = require("../Errors");
 var Response_1 = require("./Response");
 var Scope_1 = __importDefault(require("../db/Scope"));
+var bodyParser = __importStar(require("body-parser"));
 var ObjectId = mongoose_1.default.Types.ObjectId;
 var successMessage = 'success';
 function loggerMiddleware(request, response, next) {
@@ -66,6 +86,8 @@ var ApiModule = /** @class */ (function () {
                     case 0:
                         //this.app.use(express.json());
                         this.app.use(loggerMiddleware);
+                        this.app.use(bodyParser.urlencoded({ 'extended': true }));
+                        this.app.use(bodyParser.json());
                         this.app.post('/auth.register', function (request, response) { return __awaiter(_this, void 0, void 0, function () {
                             var result;
                             return __generator(this, function (_a) {
@@ -202,7 +224,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.userGetName(request.query['username'])];
+                                    case 0: return [4 /*yield*/, this.userGetName(request.body['username'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);

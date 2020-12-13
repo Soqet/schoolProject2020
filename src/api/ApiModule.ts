@@ -25,6 +25,7 @@ import {
   responseTypes
 } from './Response'
 import Scope from '../db/Scope';
+import * as bodyParser from 'body-parser';
 
 const ObjectId = mongoose.Types.ObjectId;
 const successMessage = 'success';
@@ -33,6 +34,7 @@ const successMessage = 'success';
 
 function loggerMiddleware(request: express.Request, response: express.Response, next: any) {
   console.log(`${request.method} ${request.path}`);
+
   next();
 }
 
@@ -51,6 +53,8 @@ export default class ApiModule{
   async setup() {
     //this.app.use(express.json());
     this.app.use(loggerMiddleware);
+    this.app.use(bodyParser.urlencoded({ 'extended':true }));
+    this.app.use(bodyParser.json());
 
     this.app.post('/auth.register', async (request, response) =>{
       let result = await this.authRegister(
@@ -149,7 +153,7 @@ export default class ApiModule{
 
     this.app.post('/user.getname', async (request, response) => {
       let result = await this.userGetName(
-        request.query['username'] as string
+        request.body['username'] as string
       );
       response.send(result);
     })
