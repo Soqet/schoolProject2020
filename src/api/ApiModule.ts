@@ -58,95 +58,95 @@ export default class ApiModule{
 
     this.app.post('/auth.register', async (request, response) =>{
       let result = await this.authRegister(
-        request.query['email'] as string, 
-        request.query['password'] as string, 
-        request.query['username'] as string, 
-        request.query['name'] as string
+        request.body['email'] as string, 
+        request.body['password'] as string, 
+        request.body['username'] as string, 
+        request.body['name'] as string
       );
       response.send(result);
     });
 
     this.app.post('/auth.gettoken', async (request, response) =>{
       let result = await this.authGetToken(
-        request.query['email'] as string, 
-        request.query['password'] as string,
-        request.query['scope'] as string,
-        request.query['expiresin'] as string
+        request.body['email'] as string, 
+        request.body['password'] as string,
+        request.body['scope'] as string,
+        request.body['expiresin'] as string
       );
       response.send(result);
     });
 
     this.app.post('/user.changename', async (request, response) =>{
       let result = await this.userChangeName(
-        request.query['token'] as string, 
-        request.query['currentname'] as string,
-        request.query['newname'] as string
+        request.body['token'] as string, 
+        request.body['currentname'] as string,
+        request.body['newname'] as string
       );
       response.send(result);
     });
 
     this.app.post('/user.changepassword', async (request, response) =>{
       let result = await this.userChangePassword(
-        request.query['token'] as string, 
-        request.query['currentpassword'] as string,
-        request.query['newpassword'] as string
+        request.body['token'] as string, 
+        request.body['currentpassword'] as string,
+        request.body['newpassword'] as string
       );
       response.send(result);
     });
 
     this.app.post('/user.block', async (request, response) =>{
       let result = await this.userBlock(
-        request.query['token'] as string, 
-        request.query['username'] as string
+        request.body['token'] as string, 
+        request.body['username'] as string
       );
       response.send(result);
     })
 
     this.app.post('/messages.getlastmessages', async (request, response) =>{
       let result = await this.messagesGetLastMessages(
-        request.query['token'] as string, 
-        request.query['username'] as string,
-        request.query['numberofmessages'] as string
+        request.body['token'] as string, 
+        request.body['username'] as string,
+        request.body['numberofmessages'] as string
       );
       response.send(result);
     });
 
     this.app.post('/messages.getlastmessage', async (request, response) =>{
       let result = await this.messagesGetLastMessage(
-        request.query['token'] as string, 
-        request.query['username'] as string
+        request.body['token'] as string, 
+        request.body['username'] as string
       );
       response.send(result);
     });
 
     this.app.post('/messages.deletehistory', async (request, response) =>{
       let result = await this.messagesDeleteHistory(
-        request.query['token'] as string, 
-        request.query['username'] as string
+        request.body['token'] as string, 
+        request.body['username'] as string
       );
       response.send(result);
     });
 
     this.app.post('/messages.markasread', async (request, response) =>{
       let result = await this.messagesMarkAsRead(
-        request.query['token'] as string, 
-        request.query['username'] as string
+        request.body['token'] as string, 
+        request.body['username'] as string
       );
       response.send(result);
     });
 
     this.app.post('/messages.getunread', async (request, response) => {
       let result = await this.messagesGetUnread(
-        request.query['token'] as string
+        request.body['token'] as string
       );
       response.send(result);
     });
 
     this.app.post('/messages.send', async (request, response) => {
       let result = await this.messagesSend(
-        request.query['token'] as string, 
-        request.query['username'] as string,
-        request.query['content'] as string
+        request.body['token'] as string, 
+        request.body['username'] as string,
+        request.body['content'] as string
       );
       response.send(result);
     });
@@ -156,21 +156,21 @@ export default class ApiModule{
         request.body['username'] as string
       );
       response.send(result);
-    })
+    });
 
     this.app.post('/user.getblocked', async (request, response) => {
       let result = await this.userGetBlocked(
-        request.query['token'] as string
+        request.body['token'] as string
       );
       response.send(result);
-    })
+    });
 
     this.app.post('/user.getdialogues', async (request, response) => {
       let result = await this.userGetDialogues(
-        request.query['token'] as string
+        request.body['token'] as string
       );
       response.send(result);
-    })
+    });
 
     this.app.listen(this.port);
     await this.dbModule.setup();
