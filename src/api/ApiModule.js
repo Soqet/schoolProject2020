@@ -92,7 +92,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.authRegister(request.query['email'], request.query['password'], request.query['username'], request.query['name'])];
+                                    case 0: return [4 /*yield*/, this.authRegister(request.body['email'], request.body['password'], request.body['username'], request.body['name'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -104,7 +104,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.authGetToken(request.query['email'], request.query['password'], request.query['scope'], request.query['expiresin'])];
+                                    case 0: return [4 /*yield*/, this.authGetToken(request.body['email'], request.body['password'], request.body['scope'], request.body['expiresin'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -116,7 +116,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.userChangeName(request.query['token'], request.query['currentname'], request.query['newname'])];
+                                    case 0: return [4 /*yield*/, this.userChangeName(request.body['token'], request.body['currentname'], request.body['newname'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -128,7 +128,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.userChangePassword(request.query['token'], request.query['currentpassword'], request.query['newpassword'])];
+                                    case 0: return [4 /*yield*/, this.userChangePassword(request.body['token'], request.body['currentpassword'], request.body['newpassword'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -140,7 +140,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.userBlock(request.query['token'], request.query['username'])];
+                                    case 0: return [4 /*yield*/, this.userBlock(request.body['token'], request.body['username'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -152,7 +152,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesGetLastMessages(request.query['token'], request.query['username'], request.query['numberofmessages'])];
+                                    case 0: return [4 /*yield*/, this.messagesGetLastMessages(request.body['token'], request.body['username'], request.body['numberofmessages'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -164,7 +164,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesGetLastMessage(request.query['token'], request.query['username'])];
+                                    case 0: return [4 /*yield*/, this.messagesGetLastMessage(request.body['token'], request.body['username'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -176,7 +176,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesDeleteHistory(request.query['token'], request.query['username'])];
+                                    case 0: return [4 /*yield*/, this.messagesDeleteHistory(request.body['token'], request.body['username'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -188,7 +188,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesMarkAsRead(request.query['token'], request.query['username'])];
+                                    case 0: return [4 /*yield*/, this.messagesMarkAsRead(request.body['token'], request.body['username'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -200,7 +200,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesGetUnread(request.query['token'])];
+                                    case 0: return [4 /*yield*/, this.messagesGetUnread(request.body['token'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -212,7 +212,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesSend(request.query['token'], request.query['username'], request.query['content'])];
+                                    case 0: return [4 /*yield*/, this.messagesSend(request.body['token'], request.body['username'], request.body['content'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -236,7 +236,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.userGetBlocked(request.query['token'])];
+                                    case 0: return [4 /*yield*/, this.userGetBlocked(request.body['token'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -248,7 +248,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.userGetDialogues(request.query['token'])];
+                                    case 0: return [4 /*yield*/, this.userGetDialogues(request.body['token'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);

@@ -31,11 +31,23 @@ interface IQuery {
 }
 
 export interface IMessage {
+  _id: string,
   content: string,
   date: string,
   unread: boolean
 }
 
+export interface IMessages {
+  fromId: string,
+  messages: Array<IMessage>
+}
+
+export interface IUser {
+  _id?: string,
+  username?: string;
+  name?: string,
+  passwordHash?: string
+}
 
 export default class DbModule {
 
@@ -107,6 +119,12 @@ export default class DbModule {
   async getUserByUsername(username: string) {
     const result = (await this.find(userModel, {username: username}))[0];
     if(result == null) throw new DbValueError(`User with this username (${username}) does not exist.`);
+    return result;
+  }
+
+  async getUserById(id: string) {
+    const result = (await this.find(userModel, {_id: id}))[0];
+    if(result == null) throw new DbValueError(`User with this id (${id}) does not exist.`);
     return result;
   }
 
@@ -191,17 +209,19 @@ export default class DbModule {
   }
 
   async getMessagesByUser(user: mongoose.Document) {
-    let result = (await this.find(messagesModel, { fromId: user.toObject()._id }))[0];
-    if(result == null) {
-      let messagesDocument = new messagesModel( {
-        _id: new ObjectID(),
-        fromId: user.toObject()._id,
-        histories : []
-      });
-      result = messagesDocument;
-      await this.save(messagesDocument);
-    }
-    return result;
+    // let result = (await this.find(messagesModel, { fromId: user.toObject()._id }))[0];
+    // if(result == null) {
+    //   let messagesDocument = new messagesModel( {
+    //     _id: new ObjectID(),
+    //     fromId: user.toObject()._id,
+    //     histories : []
+    //   });
+    //   result = messagesDocument;
+    //   await this.save(messagesDocument);
+    // }
+    // return result;
+    let userId = await user.toObject()._id;
+    return await this.getMessagesById(userId);
   }
 
   async getMessagesById(userId: string) {
@@ -254,6 +274,7 @@ export default class DbModule {
     //     }
     //   }}
     var message: IQuery = {};
+    console.log(toUserId);
     message[`histories.${toUserId}.messages`] = {
         content: content,
         date: Date.now().toString(),
@@ -272,17 +293,26 @@ export default class DbModule {
       }, 
       updateUnread
     );
+    await this.addNewDialogue(user, toUsername);
   }
 
   async getMessages(fromId: string, toId: string , amount: number) { //WIP
     let messages = (await this.getMessagesById(fromId));
-    var result = new Array<IMessage>();
+    var result: IMessages = {
+      fromId: fromId,
+      messages: new Array<IMessage>()
+    }
     var findObject: IQuery = {};
     findObject[`histories.${toId}`] = { $slice:  -amount }
-    var rawResult = await messagesModel.findOne({ formId: fromId }, findObject);
+    var rawResult = await messagesModel.findOne({ fromId: fromId }, findObject);
     if (rawResult == null) throw new DbError(`${fromId} is unknonwn user id.`);
-    result = rawResult.toObject()
+    result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount);
+    //console.log(result)
+    return result;
+  }
 
+  async getAllMessages(firstId: string, toId: string, amount: number) {
+    
   }
 
   async changeId(model: mongoose.Model<mongoose.Document, {}>, document: mongoose.Document) {
@@ -309,19 +339,41 @@ export default class DbModule {
     //let conversationObject = conversations.toObject();
     //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
     try {
-      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $push: { blocked: (await this.getUserByUsername(username)).toObject()._id }});
+      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $push: { blocked: {user: (await this.getUserByUsername(username)).toObject()._id }}});
     } catch (error) {}
+  }
+
+  async convertArrayOfIdToUsernames(array: Array<any>) {
+    //console.log(array);
+    for (let element of array) {
+      console.log(element)
+      element.username = await this.convertIdToUsername(String(element.user));
+      element.user = undefined;
+      element._id = undefined;
+      console.log(element)
+    }
   }
 
   async getBlocked(user: mongoose.Document) {
     let conversations  = await this.getConversationsByUser(user);
-    return conversations.toObject().blocked;
+    let result = conversations.toObject().blocked;
+    await this.convertArrayOfIdToUsernames(result);
+    return result;
   }
 
   async getDialogues(user: mongoose.Document) {
     let conversations  = await this.getConversationsByUser(user);
-    return conversations.toObject().dialogues;
+    let result = conversations.toObject().dialogues;
+    await this.convertArrayOfIdToUsernames(result);
+    return result;
 
+  }
+
+  async convertIdToUsername(id?: string) {
+    console.log(id);
+    if(!id) return undefined;
+    const userDocument = await this.getUserById(id!);
+    return userDocument.toObject().username;
   }
 
   async deleteDialogue(user: mongoose.Document, username: string) {
@@ -329,7 +381,16 @@ export default class DbModule {
     //let conversationObject = conversations.toObject();
     //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
     try {
-      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $pull: { dialogues: (await this.getUserByUsername(username)).toObject()._id }});
+      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $pull: { dialogues: {user: (await this.getUserByUsername(username)).toObject()._id }}});
+    } catch (error) {}
+  }
+
+  async unblockUser(user: mongoose.Document, username: string) {
+    let conversations = await this.getConversationsByUser(user);
+    //let conversationObject = conversations.toObject();
+    //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
+    try {
+      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $pull: { blocked: {user: (await this.getUserByUsername(username)).toObject()._id }}});
     } catch (error) {}
   }
 
@@ -338,7 +399,7 @@ export default class DbModule {
     //let conversationObject = conversations.toObject();
     //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
     try {
-      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $push: { dialogues: (await this.getUserByUsername(username)).toObject()._id }});
+      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $push: { dialogues: {user: (await this.getUserByUsername(username)).toObject()._id }}});
     } catch (error) {}
   }
 

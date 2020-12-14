@@ -212,6 +212,21 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
+    DbModule.prototype.getUserById = function (id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var result;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.find(userModel_1.default, { _id: id })];
+                    case 1:
+                        result = (_a.sent())[0];
+                        if (result == null)
+                            throw new Errors_1.DbValueError("User with this id (" + id + ") does not exist.");
+                        return [2 /*return*/, result];
+                }
+            });
+        });
+    };
     DbModule.prototype.findByIdAndUpdate = function (model, id, changes) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
@@ -409,24 +424,14 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.getMessagesByUser = function (user) {
         return __awaiter(this, void 0, void 0, function () {
-            var result, messagesDocument;
+            var userId;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.find(messagesModel_1.default, { fromId: user.toObject()._id })];
+                    case 0: return [4 /*yield*/, user.toObject()._id];
                     case 1:
-                        result = (_a.sent())[0];
-                        if (!(result == null)) return [3 /*break*/, 3];
-                        messagesDocument = new messagesModel_1.default({
-                            _id: new mongodb_1.ObjectID(),
-                            fromId: user.toObject()._id,
-                            histories: []
-                        });
-                        result = messagesDocument;
-                        return [4 /*yield*/, this.save(messagesDocument)];
-                    case 2:
-                        _a.sent();
-                        _a.label = 3;
-                    case 3: return [2 /*return*/, result];
+                        userId = _a.sent();
+                        return [4 /*yield*/, this.getMessagesById(userId)];
+                    case 2: return [2 /*return*/, _a.sent()];
                 }
             });
         });
@@ -468,6 +473,7 @@ var DbModule = /** @class */ (function () {
                     case 2:
                         toUserId = _a.apply(void 0, [(_b.sent()).toObject()._id]);
                         message = {};
+                        console.log(toUserId);
                         message["histories." + toUserId + ".messages"] = {
                             content: content,
                             date: Date.now().toString(),
@@ -485,6 +491,9 @@ var DbModule = /** @class */ (function () {
                             }, updateUnread)];
                     case 4:
                         _b.sent();
+                        return [4 /*yield*/, this.addNewDialogue(user, toUsername)];
+                    case 5:
+                        _b.sent();
                         return [2 /*return*/];
                 }
             });
@@ -498,17 +507,28 @@ var DbModule = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.getMessagesById(fromId)];
                     case 1:
                         messages = (_a.sent());
-                        result = new Array();
+                        result = {
+                            fromId: fromId,
+                            messages: new Array()
+                        };
                         findObject = {};
                         findObject["histories." + toId] = { $slice: -amount };
-                        return [4 /*yield*/, messagesModel_1.default.findOne({ formId: fromId }, findObject)];
+                        return [4 /*yield*/, messagesModel_1.default.findOne({ fromId: fromId }, findObject)];
                     case 2:
                         rawResult = _a.sent();
                         if (rawResult == null)
                             throw new Errors_1.DbError(fromId + " is unknonwn user id.");
-                        result = rawResult.toObject();
-                        return [2 /*return*/];
+                        result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount);
+                        //console.log(result)
+                        return [2 /*return*/, result];
                 }
+            });
+        });
+    };
+    DbModule.prototype.getAllMessages = function (firstId, toId, amount) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/];
             });
         });
     };
@@ -586,28 +606,81 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
+    DbModule.prototype.convertArrayOfIdToUsernames = function (array) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _i, array_1, element, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _i = 0, array_1 = array;
+                        _b.label = 1;
+                    case 1:
+                        if (!(_i < array_1.length)) return [3 /*break*/, 4];
+                        element = array_1[_i];
+                        console.log(element);
+                        _a = element;
+                        return [4 /*yield*/, this.convertIdToUsername(String(element.user))];
+                    case 2:
+                        _a.username = _b.sent();
+                        element.user = undefined;
+                        element._id = undefined;
+                        console.log(element);
+                        _b.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
     DbModule.prototype.getBlocked = function (user) {
         return __awaiter(this, void 0, void 0, function () {
-            var conversations;
+            var conversations, result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
                         conversations = _a.sent();
-                        return [2 /*return*/, conversations.toObject().blocked];
+                        result = conversations.toObject().blocked;
+                        return [4 /*yield*/, this.convertArrayOfIdToUsernames(result)];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/, result];
                 }
             });
         });
     };
     DbModule.prototype.getDialogues = function (user) {
         return __awaiter(this, void 0, void 0, function () {
-            var conversations;
+            var conversations, result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
                         conversations = _a.sent();
-                        return [2 /*return*/, conversations.toObject().dialogues];
+                        result = conversations.toObject().dialogues;
+                        return [4 /*yield*/, this.convertArrayOfIdToUsernames(result)];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/, result];
+                }
+            });
+        });
+    };
+    DbModule.prototype.convertIdToUsername = function (id) {
+        return __awaiter(this, void 0, void 0, function () {
+            var userDocument;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        console.log(id);
+                        if (!id)
+                            return [2 /*return*/, undefined];
+                        return [4 /*yield*/, this.getUserById(id)];
+                    case 1:
+                        userDocument = _a.sent();
+                        return [2 /*return*/, userDocument.toObject().username];
                 }
             });
         });
@@ -644,26 +717,27 @@ var DbModule = /** @class */ (function () {
     DbModule.prototype.addNewDialogue = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
             var conversations, _a, _b, _c, error_3;
-            var _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var _d, _e, _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
-                        conversations = _f.sent();
-                        _f.label = 2;
+                        conversations = _g.sent();
+                        _g.label = 2;
                     case 2:
-                        _f.trys.push([2, 5, , 6]);
+                        _g.trys.push([2, 5, , 6]);
                         _b = (_a = conversationModel_1.default).updateOne;
                         _c = [{ '_id': conversations.toObject()._id }];
                         _d = {};
                         _e = {};
+                        _f = {};
                         return [4 /*yield*/, this.getUserByUsername(username)];
-                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.dialogues = (_f.sent()).toObject()._id, _e), _d)]))];
+                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.dialogues = (_f.user = (_g.sent()).toObject()._id, _f), _e), _d)]))];
                     case 4:
-                        _f.sent();
+                        _g.sent();
                         return [3 /*break*/, 6];
                     case 5:
-                        error_3 = _f.sent();
+                        error_3 = _g.sent();
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }
