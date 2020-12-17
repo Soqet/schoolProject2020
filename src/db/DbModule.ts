@@ -39,6 +39,7 @@ export interface IMessage {
 
 export interface IMessages {
   fromId: string,
+  toId: string,
   messages: Array<IMessage>
 }
 
@@ -46,7 +47,7 @@ export interface IUser {
   _id?: string,
   username?: string;
   name?: string,
-  passwordHash?: string
+  token?: string
 }
 
 export default class DbModule {
@@ -93,6 +94,11 @@ export default class DbModule {
     });
     const stringToken = newToken.toObject().token;
     await this.save(newToken);
+    let result: IUser = {
+      name: user.toObject().name,
+      username: user.toObject().username,
+      token: stringToken
+    }
     return stringToken;
   }
 
@@ -195,7 +201,35 @@ export default class DbModule {
 
   async checkStringToken(token: string, methodName?: string) {
     return this.checkToken(await this.getToken(token), methodName);
-  } 
+  }
+
+
+
+  async getOneMessageFromEveryUnread(user: mongoose.Document) {
+    const conversations = await this.getConversationsByUser(user);
+    const userId = user.toObject()._id;
+    const dialogues = await conversations.toObject().dialogues;
+    const result = new Array<IMessage>();
+    for(let id of dialogues) {
+      let messages = await this.getMessagesById(id);
+      if(messages.toObject().histories.get(userId).unread) {
+        result.push((messages.toObject().histories.get(userId).messages.slice(-1)));
+      }
+    }
+    return result;
+  }
+
+  async getOneMessageFromEveryDialogue(user: mongoose.Document) {
+    const conversations = await this.getConversationsByUser(user);
+    const userId = user.toObject()._id;
+    const dialogues = await conversations.toObject().dialogues;
+    const result = new Array<IMessage>();
+    for(let id of dialogues) {
+      let messages = await this.getMessagesById(id);
+        result.push((messages.toObject().histories.get(userId).messages.slice(-1)));
+    }
+    return result;
+  }
 
   async changeNameSafe(token: string, currentName: string, newName: string) {
     let userDocument = await this.getUserByToken(token);
@@ -296,23 +330,55 @@ export default class DbModule {
     await this.addNewDialogue(user, toUsername);
   }
 
-  async getMessages(fromId: string, toId: string , amount: number) { //WIP
-    let messages = (await this.getMessagesById(fromId));
+  async getMessages(fromId: string, toId: string, amount?: number) { 
+    //let messages = (await this.getMessagesById(fromId));
+    
     var result: IMessages = {
       fromId: fromId,
+      toId: toId,
       messages: new Array<IMessage>()
     }
-    var findObject: IQuery = {};
-    findObject[`histories.${toId}`] = { $slice:  -amount }
-    var rawResult = await messagesModel.findOne({ fromId: fromId }, findObject);
+    //var findObject: IQuery = {};
+    //findObject[`histories.${toId}`] = { $slice:  -amount }
+    var rawResult = await messagesModel.findOne({ fromId: fromId });
     if (rawResult == null) throw new DbError(`${fromId} is unknonwn user id.`);
-    result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount);
+    if(!amount) result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount!);
+    else result.messages = (rawResult.toObject().histories.get(toId).messages).reverse();
     //console.log(result)
     return result;
   }
 
-  async getAllMessages(firstId: string, toId: string, amount: number) {
-    
+  async getAllMessages(firstId: string, secondId: string, fromNumber: number, toNumber: number) {
+    //const amount = toNumber - fromNumber + 1;
+    //console.log((await this.getMessagesById(firstId)).toObject().histories.keys().next().value, typeof firstId);
+    //console.log((await this.getMessagesById(firstId)).toObject().histories.get(firstId));
+    let firstMessages = (await this.getMessagesById(firstId)).toObject().histories.get(secondId);
+    let secondMessages = (await this.getMessagesById(secondId)).toObject().histories.get(firstId);
+    //console.log(firstMessages, secondMessages)
+    if(!!firstMessages) firstMessages = firstMessages.messages.reverse();
+    if(!!secondMessages) secondMessages= secondMessages.messages.reverse();
+    //console.log(firstMessages, secondMessages);
+    if(!firstMessages && !secondMessages) {
+      throw new DbError('Users have not messages with each other.');
+    } 
+    const result = new Array<IMessage>();
+    let firstCounter = 0;
+    let secondCounter = 0;
+    for(let i = 0; i <= toNumber; i++) {
+      if(!secondMessages || (firstMessages[firstCounter].date < secondMessages[secondCounter].date)) {
+        result.push(firstMessages[firstCounter]);
+        firstCounter++;
+      } else {
+        result.push(secondMessages[secondCounter]);
+        secondCounter++;
+      }
+      if(!result[result.length - 1]) {
+        break;
+      }
+    }
+    console.log(result, fromNumber, toNumber)
+    //result.reverse();
+    return result.slice(fromNumber, toNumber + 1);
   }
 
   async changeId(model: mongoose.Model<mongoose.Document, {}>, document: mongoose.Document) {
@@ -367,6 +433,23 @@ export default class DbModule {
     await this.convertArrayOfIdToUsernames(result);
     return result;
 
+  }
+
+  async getUnreadWithUser(fromId: string, toId: string) {
+    let messages = await this.getMessages(fromId, toId);
+    console.log(messages)
+    let unreadMessages: IMessages = {
+      fromId: fromId,
+      toId: toId,
+      messages: new Array<IMessage>()
+    };
+    for(let message of messages.messages) {
+      if(message.unread) {
+        unreadMessages.messages.push(message)
+      }
+    }
+    console.log(unreadMessages);
+    return unreadMessages;
   }
 
   async convertIdToUsername(id?: string) {

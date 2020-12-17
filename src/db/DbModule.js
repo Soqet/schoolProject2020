@@ -131,7 +131,7 @@ var DbModule = /** @class */ (function () {
     //await hash(user.toJSON()._id as string + (Math.random() as any as string), 10)
     DbModule.prototype.createToken = function (user, scope, expiresIn) {
         return __awaiter(this, void 0, void 0, function () {
-            var newToken, stringToken;
+            var newToken, stringToken, result;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -147,6 +147,11 @@ var DbModule = /** @class */ (function () {
                         return [4 /*yield*/, this.save(newToken)];
                     case 1:
                         _a.sent();
+                        result = {
+                            name: user.toObject().name,
+                            username: user.toObject().username,
+                            token: stringToken
+                        };
                         return [2 /*return*/, stringToken];
                 }
             });
@@ -402,6 +407,70 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
+    DbModule.prototype.getOneMessageFromEveryUnread = function (user) {
+        return __awaiter(this, void 0, void 0, function () {
+            var conversations, userId, dialogues, result, _i, dialogues_1, id, messages;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
+                    case 1:
+                        conversations = _a.sent();
+                        userId = user.toObject()._id;
+                        return [4 /*yield*/, conversations.toObject().dialogues];
+                    case 2:
+                        dialogues = _a.sent();
+                        result = new Array();
+                        _i = 0, dialogues_1 = dialogues;
+                        _a.label = 3;
+                    case 3:
+                        if (!(_i < dialogues_1.length)) return [3 /*break*/, 6];
+                        id = dialogues_1[_i];
+                        return [4 /*yield*/, this.getMessagesById(id)];
+                    case 4:
+                        messages = _a.sent();
+                        if (messages.toObject().histories.get(userId).unread) {
+                            result.push((messages.toObject().histories.get(userId).messages.slice(-1)));
+                        }
+                        _a.label = 5;
+                    case 5:
+                        _i++;
+                        return [3 /*break*/, 3];
+                    case 6: return [2 /*return*/, result];
+                }
+            });
+        });
+    };
+    DbModule.prototype.getOneMessageFromEveryDialogue = function (user) {
+        return __awaiter(this, void 0, void 0, function () {
+            var conversations, userId, dialogues, result, _i, dialogues_2, id, messages;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
+                    case 1:
+                        conversations = _a.sent();
+                        userId = user.toObject()._id;
+                        return [4 /*yield*/, conversations.toObject().dialogues];
+                    case 2:
+                        dialogues = _a.sent();
+                        result = new Array();
+                        _i = 0, dialogues_2 = dialogues;
+                        _a.label = 3;
+                    case 3:
+                        if (!(_i < dialogues_2.length)) return [3 /*break*/, 6];
+                        id = dialogues_2[_i];
+                        return [4 /*yield*/, this.getMessagesById(id)];
+                    case 4:
+                        messages = _a.sent();
+                        result.push((messages.toObject().histories.get(userId).messages.slice(-1)));
+                        _a.label = 5;
+                    case 5:
+                        _i++;
+                        return [3 /*break*/, 3];
+                    case 6: return [2 /*return*/, result];
+                }
+            });
+        });
+    };
     DbModule.prototype.changeNameSafe = function (token, currentName, newName) {
         return __awaiter(this, void 0, void 0, function () {
             var userDocument, result;
@@ -501,34 +570,70 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.getMessages = function (fromId, toId, amount) {
         return __awaiter(this, void 0, void 0, function () {
-            var messages, result, findObject, rawResult;
+            var result, rawResult;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.getMessagesById(fromId)];
-                    case 1:
-                        messages = (_a.sent());
+                    case 0:
                         result = {
                             fromId: fromId,
+                            toId: toId,
                             messages: new Array()
                         };
-                        findObject = {};
-                        findObject["histories." + toId] = { $slice: -amount };
-                        return [4 /*yield*/, messagesModel_1.default.findOne({ fromId: fromId }, findObject)];
-                    case 2:
+                        return [4 /*yield*/, messagesModel_1.default.findOne({ fromId: fromId })];
+                    case 1:
                         rawResult = _a.sent();
                         if (rawResult == null)
                             throw new Errors_1.DbError(fromId + " is unknonwn user id.");
-                        result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount);
+                        if (!amount)
+                            result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount);
+                        else
+                            result.messages = (rawResult.toObject().histories.get(toId).messages).reverse();
                         //console.log(result)
                         return [2 /*return*/, result];
                 }
             });
         });
     };
-    DbModule.prototype.getAllMessages = function (firstId, toId, amount) {
+    DbModule.prototype.getAllMessages = function (firstId, secondId, fromNumber, toNumber) {
         return __awaiter(this, void 0, void 0, function () {
+            var firstMessages, secondMessages, result, firstCounter, secondCounter, i;
             return __generator(this, function (_a) {
-                return [2 /*return*/];
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getMessagesById(firstId)];
+                    case 1:
+                        firstMessages = (_a.sent()).toObject().histories.get(secondId);
+                        return [4 /*yield*/, this.getMessagesById(secondId)];
+                    case 2:
+                        secondMessages = (_a.sent()).toObject().histories.get(firstId);
+                        //console.log(firstMessages, secondMessages)
+                        if (!!firstMessages)
+                            firstMessages = firstMessages.messages.reverse();
+                        if (!!secondMessages)
+                            secondMessages = secondMessages.messages.reverse();
+                        //console.log(firstMessages, secondMessages);
+                        if (!firstMessages && !secondMessages) {
+                            throw new Errors_1.DbError('Users have not messages with each other.');
+                        }
+                        result = new Array();
+                        firstCounter = 0;
+                        secondCounter = 0;
+                        for (i = 0; i <= toNumber; i++) {
+                            if (!secondMessages || (firstMessages[firstCounter].date < secondMessages[secondCounter].date)) {
+                                result.push(firstMessages[firstCounter]);
+                                firstCounter++;
+                            }
+                            else {
+                                result.push(secondMessages[secondCounter]);
+                                secondCounter++;
+                            }
+                            if (!result[result.length - 1]) {
+                                break;
+                            }
+                        }
+                        console.log(result, fromNumber, toNumber);
+                        //result.reverse();
+                        return [2 /*return*/, result.slice(fromNumber, toNumber + 1)];
+                }
             });
         });
     };
@@ -580,26 +685,27 @@ var DbModule = /** @class */ (function () {
     DbModule.prototype.blockUser = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
             var conversations, _a, _b, _c, error_1;
-            var _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var _d, _e, _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
-                        conversations = _f.sent();
-                        _f.label = 2;
+                        conversations = _g.sent();
+                        _g.label = 2;
                     case 2:
-                        _f.trys.push([2, 5, , 6]);
+                        _g.trys.push([2, 5, , 6]);
                         _b = (_a = conversationModel_1.default).updateOne;
                         _c = [{ '_id': conversations.toObject()._id }];
                         _d = {};
                         _e = {};
+                        _f = {};
                         return [4 /*yield*/, this.getUserByUsername(username)];
-                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.blocked = (_f.sent()).toObject()._id, _e), _d)]))];
+                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.blocked = (_f.user = (_g.sent()).toObject()._id, _f), _e), _d)]))];
                     case 4:
-                        _f.sent();
+                        _g.sent();
                         return [3 /*break*/, 6];
                     case 5:
-                        error_1 = _f.sent();
+                        error_1 = _g.sent();
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }
@@ -668,6 +774,32 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
+    DbModule.prototype.getUnreadWithUser = function (fromId, toId) {
+        return __awaiter(this, void 0, void 0, function () {
+            var messages, unreadMessages, _i, _a, message;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0: return [4 /*yield*/, this.getMessages(fromId, toId)];
+                    case 1:
+                        messages = _b.sent();
+                        console.log(messages);
+                        unreadMessages = {
+                            fromId: fromId,
+                            toId: toId,
+                            messages: new Array()
+                        };
+                        for (_i = 0, _a = messages.messages; _i < _a.length; _i++) {
+                            message = _a[_i];
+                            if (message.unread) {
+                                unreadMessages.messages.push(message);
+                            }
+                        }
+                        console.log(unreadMessages);
+                        return [2 /*return*/, unreadMessages];
+                }
+            });
+        });
+    };
     DbModule.prototype.convertIdToUsername = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             var userDocument;
@@ -688,26 +820,57 @@ var DbModule = /** @class */ (function () {
     DbModule.prototype.deleteDialogue = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
             var conversations, _a, _b, _c, error_2;
-            var _d, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
+            var _d, _e, _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
-                        conversations = _f.sent();
-                        _f.label = 2;
+                        conversations = _g.sent();
+                        _g.label = 2;
                     case 2:
-                        _f.trys.push([2, 5, , 6]);
+                        _g.trys.push([2, 5, , 6]);
                         _b = (_a = conversationModel_1.default).updateOne;
                         _c = [{ '_id': conversations.toObject()._id }];
                         _d = {};
                         _e = {};
+                        _f = {};
                         return [4 /*yield*/, this.getUserByUsername(username)];
-                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$pull = (_e.dialogues = (_f.sent()).toObject()._id, _e), _d)]))];
+                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$pull = (_e.dialogues = (_f.user = (_g.sent()).toObject()._id, _f), _e), _d)]))];
                     case 4:
-                        _f.sent();
+                        _g.sent();
                         return [3 /*break*/, 6];
                     case 5:
-                        error_2 = _f.sent();
+                        error_2 = _g.sent();
+                        return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    DbModule.prototype.unblockUser = function (user, username) {
+        return __awaiter(this, void 0, void 0, function () {
+            var conversations, _a, _b, _c, error_3;
+            var _d, _e, _f;
+            return __generator(this, function (_g) {
+                switch (_g.label) {
+                    case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
+                    case 1:
+                        conversations = _g.sent();
+                        _g.label = 2;
+                    case 2:
+                        _g.trys.push([2, 5, , 6]);
+                        _b = (_a = conversationModel_1.default).updateOne;
+                        _c = [{ '_id': conversations.toObject()._id }];
+                        _d = {};
+                        _e = {};
+                        _f = {};
+                        return [4 /*yield*/, this.getUserByUsername(username)];
+                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$pull = (_e.blocked = (_f.user = (_g.sent()).toObject()._id, _f), _e), _d)]))];
+                    case 4:
+                        _g.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        error_3 = _g.sent();
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }
@@ -716,7 +879,7 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.addNewDialogue = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
-            var conversations, _a, _b, _c, error_3;
+            var conversations, _a, _b, _c, error_4;
             var _d, _e, _f;
             return __generator(this, function (_g) {
                 switch (_g.label) {
@@ -737,7 +900,7 @@ var DbModule = /** @class */ (function () {
                         _g.sent();
                         return [3 /*break*/, 6];
                     case 5:
-                        error_3 = _g.sent();
+                        error_4 = _g.sent();
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }

@@ -137,7 +137,18 @@ export default class ApiModule{
 
     this.app.post('/messages.getunread', async (request, response) => {
       let result = await this.messagesGetUnread(
-        request.body['token'] as string
+        request.body['token'] as string,
+        request.body['username'] as string
+      );
+      response.send(result);
+    });
+
+    this.app.post('/messages.get', async (request, response) => {
+      let result = await this.messagesGet(
+        request.body['token'] as string, 
+        request.body['username'] as string,
+        request.body['from'] as string,
+        request.body['to'] as string
       );
       response.send(result);
     });
@@ -224,17 +235,45 @@ export default class ApiModule{
     return response;
   }
   
-  async messagesGetUnread(token: string) {
+  async messagesGetUnread(token: string, username: string) {
     let response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.getunread')) throw new ScopeError('Check token scope.');
-      response = Response.fromSuccessData()
+      const result = await this.dbModule.getUnreadWithUser(
+        String((await this.dbModule.getUserByToken(token)).toObject()._id),
+        String((await this.dbModule.getUserByUsername(username)).toObject()._id),
+      );
+      response = Response.fromSuccessData(result)
     } catch(error) {
       console.log(error);
-      return String(error.message);
+      response = Response.fromError(error);
     }
     return response;
-  } 
+  }
+
+  async messagesGet(token: string, username: string, from: string, to: string) {
+    let response;
+    try {
+      if(!this.dbModule.checkStringToken(token, 'messages.get')) throw new ScopeError('Check token scope.');
+      const fromNumber = parseInt(from);
+      const toNumber = parseInt(to);
+      //console.log(from, to, fromNumber, toNumber);
+      if((!fromNumber && fromNumber != 0)  || (!toNumber && toNumber != 0)) {
+        throw new DbValueError('Wrong numbers;');
+      }
+      const result = await this.dbModule.getAllMessages(
+        String((await this.dbModule.getUserByToken(token)).toObject()._id),
+        String((await this.dbModule.getUserByUsername(username)).toObject()._id),
+        fromNumber,
+        toNumber
+      );
+      response = Response.fromSuccessData(result);
+    } catch(error) {
+      console.log(error);
+      response = Response.fromError(error);
+    }
+    return response;
+  }
 
   async messagesGetLastMessages(token: string, username: string, numberOfMessagesString: string) {
     let response: Response;
@@ -242,8 +281,8 @@ export default class ApiModule{
       if(!this.dbModule.checkStringToken(token, 'messages.getlastmessages')) throw new ScopeError('Check token scope.');
       const numberofmessages = parseInt(numberOfMessagesString);
       if(!!numberOfMessagesString) throw new Error('Wrong number of messges.');
-      let result = '';
-      response = Response.fromSuccessData();
+      let result = await this.dbModule.getOneMessageFromEveryDialogue(await this.dbModule.getUserByToken(token));
+      response = Response.fromSuccessData(result);
     } catch(error) {
       console.log(error);
       response = Response.fromError(error);
