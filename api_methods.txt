@@ -32,9 +32,7 @@ user:
 
 messages:
   messages.send:
-    (token, username of receiver, random number) -> 0 | error
-    descritpion: random number уникальное число для каждого сообщения, сообщение с уже использованым 
-      номером не будет отправлено. это сделано для защиты от отправки одинаковых сообщений.
+    (token, username of receiver, content) -> 0 | error
 
   messages.getunread:
     (token) -> json of messages | error

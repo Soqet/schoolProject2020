@@ -104,9 +104,7 @@ export default class ApiModule{
 
     this.app.post('/messages.getlastmessages', async (request, response) =>{
       let result = await this.messagesGetLastMessages(
-        request.body['token'] as string, 
-        request.body['username'] as string,
-        request.body['numberofmessages'] as string
+        request.body['token'] as string
       );
       response.send(result);
     });
@@ -312,12 +310,10 @@ export default class ApiModule{
     return response;
   }
 
-  async messagesGetLastMessages(token: string, username: string, numberOfMessagesString: string) {
+  async messagesGetLastMessages(token: string) {
     let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.getlastmessages')) throw new ScopeError('Check token scope.');
-      const numberofmessages = parseInt(numberOfMessagesString);
-      if(!!numberOfMessagesString) throw new Error('Wrong number of messges.');
       let result = await this.dbModule.getOneMessageFromEveryDialogue(await this.dbModule.getUserByToken(token));
       response = Response.fromSuccessData(result);
     } catch(error) {
