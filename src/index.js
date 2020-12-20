@@ -5,10 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var ApiModule_1 = __importDefault(require("./api/ApiModule"));
 var DbModule_1 = __importDefault(require("./db/DbModule"));
-var uri = process.env.uri;
-var port = process.env.PORT || process.env.port;
-var dbModule = new DbModule_1.default(uri);
-var apiModule = new ApiModule_1.default(parseInt(port), dbModule);
+var _a = process.env, PORT = _a.PORT, URI = _a.URI;
+console.log(URI, PORT);
+var dbModule = new DbModule_1.default(URI);
+var apiModule = new ApiModule_1.default(parseInt(PORT), dbModule);
 apiModule.setup();
 console.log('API started.');
 // test()

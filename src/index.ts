@@ -2,13 +2,14 @@ import ApiModule from './api/ApiModule';
 import DbModule from './db/DbModule';
 
 const {
-  uri
+  PORT,
+  URI
 } = process.env;
 
-const port = process.env.PORT || process.env.port
+console.log(URI, PORT)
 
-let dbModule = new DbModule(uri as string);
-let apiModule = new ApiModule(parseInt(port as string), dbModule);
+let dbModule = new DbModule(URI as string);
+let apiModule = new ApiModule(parseInt(PORT as string), dbModule);
 
 apiModule.setup();
 console.log('API started.');
