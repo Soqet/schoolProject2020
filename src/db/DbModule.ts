@@ -31,6 +31,8 @@ interface IQuery {
 }
 
 export interface IMessage {
+  fromUsername?: string,
+  toUsername?: string,
   _id: string,
   content: string,
   date: string,
@@ -38,8 +40,8 @@ export interface IMessage {
 }
 
 export interface IMessages {
-  fromId: string,
-  toId: string,
+  fromId?: string,
+  toId?: string,
   messages: Array<IMessage>
 }
 
@@ -47,6 +49,7 @@ export interface IUser {
   _id?: string,
   username?: string;
   name?: string,
+  email?: string,
   token?: string
 }
 
@@ -203,7 +206,16 @@ export default class DbModule {
     return this.checkToken(await this.getToken(token), methodName);
   }
 
+  async validateToken(token: mongoose.Document) {
+    const user = await this.getUserByToken(token.toObject().token);
+    if(token.toObject().passwordHash != user.toObject().passwordHash) return false;
+    if(token.toObject().expiresIn + token.toObject().date < (new Date()).getMilliseconds()) return false;
+    return true;
+  }
 
+  async validateStringToken(token: string) {
+    return this.validateToken(await this.getToken(token));
+  }
 
   async getOneMessageFromEveryUnread(user: mongoose.Document) {
     const conversations = await this.getConversationsByUser(user);
@@ -273,7 +285,13 @@ export default class DbModule {
   }
 
   async sendMessage (user: mongoose.Document, toUsername: string, content: string) {
-    let messages = await this.getMessagesByUser(user);
+    if(user.toObject().username == toUsername) throw new DbError('You can not send messages to yourself.');
+    const userBlocked = await this.getBlocked(user);
+    if (userBlocked.includes({username: toUsername})) throw new DbError('You blocked this user.');
+    const toUserDoc = await this.getUserByUsername(toUsername);
+    const toUserBlocked = await this.getBlocked(toUserDoc);
+    if (userBlocked.includes({ username: user.toObject().username })) throw new DbError('You blocked by this user.');
+    //let messages = await this.getMessagesByUser(user);
     let toUserId = String((await this.getUserByUsername(toUsername)).toObject()._id);
     /* try {
       await messagesModel.updateOne(
@@ -360,23 +378,38 @@ export default class DbModule {
     //console.log(firstMessages, secondMessages);
     if(!firstMessages && !secondMessages) {
       throw new DbError('Users have not messages with each other.');
-    } 
+    }
+    const firstUsername = (await this.getUserById(firstId)).toObject().username;
+    const secondUsername = (await this.getUserById(secondId)).toObject().username;
     const result = new Array<IMessage>();
     let firstCounter = 0;
     let secondCounter = 0;
     for(let i = 0; i <= toNumber; i++) {
       if(!secondMessages || (firstMessages[firstCounter].date < secondMessages[secondCounter].date)) {
-        result.push(firstMessages[firstCounter]);
+        //let message: IMessage = firstMessages[firstCounter].toObject();
+        //console.log(message);
+        //if(!!message) {
+        //  message.fromUsername = firstUsername;
+        //  message.toUsername = secondUsername;
+        //}
+        //console.log(message)
+        result.push({...firstMessages[firstCounter]?.toObject(), fromUsername: firstUsername, toUsername: secondUsername});
         firstCounter++;
       } else {
-        result.push(secondMessages[secondCounter]);
+        // let message: IMessage = secondMessages[secondCounter];
+        // if(!!message) {
+        //   message.fromUsername = secondUsername;
+        //   message.toUsername = firstUsername;
+        // }
+        result.push({...secondMessages[secondCounter]?.toObject(), fromUsername: secondUsername, toUsername: firstUsername});
         secondCounter++;
       }
-      if(!result[result.length - 1]) {
+      if(!result[result.length - 1].hasOwnProperty('content')) {
+        result[result.length - 1] = null as any as IMessage;
         break;
       }
     }
-    console.log(result, fromNumber, toNumber)
+    console.log(result)
     //result.reverse();
     return result.slice(fromNumber, toNumber + 1);
   }
@@ -437,7 +470,7 @@ export default class DbModule {
 
   async getUnreadWithUser(fromId: string, toId: string) {
     let messages = await this.getMessages(fromId, toId);
-    console.log(messages)
+    //console.log(messages)
     let unreadMessages: IMessages = {
       fromId: fromId,
       toId: toId,
@@ -448,7 +481,7 @@ export default class DbModule {
         unreadMessages.messages.push(message)
       }
     }
-    console.log(unreadMessages);
+    //console.log(unreadMessages);
     return unreadMessages;
   }
 
@@ -486,4 +519,27 @@ export default class DbModule {
     } catch (error) {}
   }
 
+  async markAsRead(fromId: string, toId: string) {
+    const findObject: IQuery = {}
+    findObject['fromId'] = fromId;
+    const updateObject: IQuery = {};
+    updateObject[`histories.${toId}.unread`] = false;
+    updateObject[`histories.${toId}.messages.$[].unread`] = false;
+    /*let result = */await messagesModel.updateMany(findObject, { $set: updateObject } );
+    //console.log(result);
+    //console.log(await messagesModel.find(findObject));
+  }
+
+  async getFullUserInfo(token: string) {
+    let user = (await this.getUserByToken(token)).toObject();;
+    let result: IUser = {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      token: token,
+      name: user.name
+    }
+    return result;
+  }
+  
 }

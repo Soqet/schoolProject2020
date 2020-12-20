@@ -183,8 +183,45 @@ export default class ApiModule{
       response.send(result);
     });
 
+    this.app.post('/user.validatetoken', async (request, response) => {
+      let result = await this.validateToken(
+        request.body['token'] as string
+      );
+      response.send(result);
+    });
+
+    this.app.post('/user.getfullinfo', async (request, response) => {
+      let result = await this.getFullInfo(
+        request.body['token'] as string
+      );
+      response.send(result);
+    });
+
     this.app.listen(this.port);
     await this.dbModule.setup();
+  }
+
+  async getFullInfo(token: string) {
+    let response;
+    try {
+      if(!this.dbModule.checkStringToken(token, 'user.getfullinfo')) throw new ScopeError('Check token scope.');
+      let result = await this.dbModule.getFullUserInfo(token);
+      response = Response.fromSuccessData(result)
+    } catch(error) {
+      response = Response.fromError(error);
+    }
+    return response;
+  }
+
+  async validateToken(token: string) {
+    let response;
+    try {
+      let result = await this.dbModule.validateStringToken(token);
+      response = Response.fromSuccessData(result)
+    } catch(error) {
+      response = Response.fromError(error);
+    }
+    return response;
   }
 
   async authGetToken(email: string, password: string, scope: string, expiresIn: string) {
@@ -307,8 +344,11 @@ export default class ApiModule{
     let response: Response;
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.markasread')) throw new ScopeError('Check token scope.');
-      let result = successMessage; //function here
-      response = Response.fromSuccessData();
+      let result = await this.dbModule.markAsRead(
+        (await this.dbModule.getUserByToken(token)).toObject()._id, 
+        (await this.dbModule.getUserByUsername(username)).toObject()._id
+      )
+      response = Response.fromSuccessData(result);
     } catch(error) {
       console.log(error);
       response = Response.fromError(error);
@@ -381,7 +421,6 @@ export default class ApiModule{
     return response;
   }
 
-  
   async userChangePassword(token: string, currentPassword: string, newPassword: string) {
     let response: Response;
     try{

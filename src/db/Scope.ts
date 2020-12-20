@@ -68,7 +68,8 @@ export default class Scope {
     {methodName: 'messages.getlastmessage', methodScope: ScopeBytes.readMessages},
     {methodName: 'user.getblocked', methodScope: ScopeBytes.readMessages},
     {methodName: 'user.getdialogues', methodScope: ScopeBytes.readMessages},
-    {methodName: 'messages.get', methodScope: ScopeBytes.readMessages}
+    {methodName: 'messages.get', methodScope: ScopeBytes.readMessages},
+    {methodName: 'user.getfullinfo', methodScope: ScopeBytes.getInfo}
   ];
   public scope: number;
 

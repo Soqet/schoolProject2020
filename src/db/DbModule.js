@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
@@ -407,6 +418,36 @@ var DbModule = /** @class */ (function () {
             });
         });
     };
+    DbModule.prototype.validateToken = function (token) {
+        return __awaiter(this, void 0, void 0, function () {
+            var user;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getUserByToken(token.toObject().token)];
+                    case 1:
+                        user = _a.sent();
+                        if (token.toObject().passwordHash != user.toObject().passwordHash)
+                            return [2 /*return*/, false];
+                        if (token.toObject().expiresIn + token.toObject().date < (new Date()).getMilliseconds())
+                            return [2 /*return*/, false];
+                        return [2 /*return*/, true];
+                }
+            });
+        });
+    };
+    DbModule.prototype.validateStringToken = function (token) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _a = this.validateToken;
+                        return [4 /*yield*/, this.getToken(token)];
+                    case 1: return [2 /*return*/, _a.apply(this, [_b.sent()])];
+                }
+            });
+        });
+    };
     DbModule.prototype.getOneMessageFromEveryUnread = function (user) {
         return __awaiter(this, void 0, void 0, function () {
             var conversations, userId, dialogues, result, _i, dialogues_1, id, messages;
@@ -531,15 +572,28 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.sendMessage = function (user, toUsername, content) {
         return __awaiter(this, void 0, void 0, function () {
-            var messages, toUserId, _a, message, updateUnread;
+            var userBlocked, toUserDoc, toUserBlocked, toUserId, _a, message, updateUnread;
             return __generator(this, function (_b) {
                 switch (_b.label) {
-                    case 0: return [4 /*yield*/, this.getMessagesByUser(user)];
+                    case 0:
+                        if (user.toObject().username == toUsername)
+                            throw new Errors_1.DbError('You can not send messages to yourself.');
+                        return [4 /*yield*/, this.getBlocked(user)];
                     case 1:
-                        messages = _b.sent();
-                        _a = String;
+                        userBlocked = _b.sent();
+                        if (userBlocked.includes({ username: toUsername }))
+                            throw new Errors_1.DbError('You blocked this user.');
                         return [4 /*yield*/, this.getUserByUsername(toUsername)];
                     case 2:
+                        toUserDoc = _b.sent();
+                        return [4 /*yield*/, this.getBlocked(toUserDoc)];
+                    case 3:
+                        toUserBlocked = _b.sent();
+                        if (userBlocked.includes({ username: user.toObject().username }))
+                            throw new Errors_1.DbError('You blocked by this user.');
+                        _a = String;
+                        return [4 /*yield*/, this.getUserByUsername(toUsername)];
+                    case 4:
                         toUserId = _a.apply(void 0, [(_b.sent()).toObject()._id]);
                         message = {};
                         console.log(toUserId);
@@ -551,17 +605,17 @@ var DbModule = /** @class */ (function () {
                         return [4 /*yield*/, messagesModel_1.default.updateOne({
                                 'fromId': user.toObject()._id
                             }, { $push: message })];
-                    case 3:
+                    case 5:
                         _b.sent();
                         updateUnread = {};
                         updateUnread["histories." + toUserId + ".unread"] = true;
                         return [4 /*yield*/, messagesModel_1.default.updateOne({
                                 'fromId': user.toObject()._id
                             }, updateUnread)];
-                    case 4:
+                    case 6:
                         _b.sent();
                         return [4 /*yield*/, this.addNewDialogue(user, toUsername)];
-                    case 5:
+                    case 7:
                         _b.sent();
                         return [2 /*return*/];
                 }
@@ -595,16 +649,17 @@ var DbModule = /** @class */ (function () {
         });
     };
     DbModule.prototype.getAllMessages = function (firstId, secondId, fromNumber, toNumber) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var firstMessages, secondMessages, result, firstCounter, secondCounter, i;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var firstMessages, secondMessages, firstUsername, secondUsername, result, firstCounter, secondCounter, i;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0: return [4 /*yield*/, this.getMessagesById(firstId)];
                     case 1:
-                        firstMessages = (_a.sent()).toObject().histories.get(secondId);
+                        firstMessages = (_c.sent()).toObject().histories.get(secondId);
                         return [4 /*yield*/, this.getMessagesById(secondId)];
                     case 2:
-                        secondMessages = (_a.sent()).toObject().histories.get(firstId);
+                        secondMessages = (_c.sent()).toObject().histories.get(firstId);
                         //console.log(firstMessages, secondMessages)
                         if (!!firstMessages)
                             firstMessages = firstMessages.messages.reverse();
@@ -614,23 +669,42 @@ var DbModule = /** @class */ (function () {
                         if (!firstMessages && !secondMessages) {
                             throw new Errors_1.DbError('Users have not messages with each other.');
                         }
+                        return [4 /*yield*/, this.getUserById(firstId)];
+                    case 3:
+                        firstUsername = (_c.sent()).toObject().username;
+                        return [4 /*yield*/, this.getUserById(secondId)];
+                    case 4:
+                        secondUsername = (_c.sent()).toObject().username;
                         result = new Array();
                         firstCounter = 0;
                         secondCounter = 0;
                         for (i = 0; i <= toNumber; i++) {
                             if (!secondMessages || (firstMessages[firstCounter].date < secondMessages[secondCounter].date)) {
-                                result.push(firstMessages[firstCounter]);
+                                //let message: IMessage = firstMessages[firstCounter].toObject();
+                                //console.log(message);
+                                //if(!!message) {
+                                //  message.fromUsername = firstUsername;
+                                //  message.toUsername = secondUsername;
+                                //}
+                                //console.log(message)
+                                result.push(__assign(__assign({}, (_a = firstMessages[firstCounter]) === null || _a === void 0 ? void 0 : _a.toObject()), { fromUsername: firstUsername, toUsername: secondUsername }));
                                 firstCounter++;
                             }
                             else {
-                                result.push(secondMessages[secondCounter]);
+                                // let message: IMessage = secondMessages[secondCounter];
+                                // if(!!message) {
+                                //   message.fromUsername = secondUsername;
+                                //   message.toUsername = firstUsername;
+                                // }
+                                result.push(__assign(__assign({}, (_b = secondMessages[secondCounter]) === null || _b === void 0 ? void 0 : _b.toObject()), { fromUsername: secondUsername, toUsername: firstUsername }));
                                 secondCounter++;
                             }
-                            if (!result[result.length - 1]) {
+                            if (!result[result.length - 1].hasOwnProperty('content')) {
+                                result[result.length - 1] = null;
                                 break;
                             }
                         }
-                        console.log(result, fromNumber, toNumber);
+                        console.log(result);
                         //result.reverse();
                         return [2 /*return*/, result.slice(fromNumber, toNumber + 1)];
                 }
@@ -782,7 +856,6 @@ var DbModule = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.getMessages(fromId, toId)];
                     case 1:
                         messages = _b.sent();
-                        console.log(messages);
                         unreadMessages = {
                             fromId: fromId,
                             toId: toId,
@@ -794,7 +867,7 @@ var DbModule = /** @class */ (function () {
                                 unreadMessages.messages.push(message);
                             }
                         }
-                        console.log(unreadMessages);
+                        //console.log(unreadMessages);
                         return [2 /*return*/, unreadMessages];
                 }
             });
@@ -903,6 +976,46 @@ var DbModule = /** @class */ (function () {
                         error_4 = _g.sent();
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    DbModule.prototype.markAsRead = function (fromId, toId) {
+        return __awaiter(this, void 0, void 0, function () {
+            var findObject, updateObject;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        findObject = {};
+                        findObject['fromId'] = fromId;
+                        updateObject = {};
+                        updateObject["histories." + toId + ".unread"] = false;
+                        updateObject["histories." + toId + ".messages.$[].unread"] = false;
+                        /*let result = */ return [4 /*yield*/, messagesModel_1.default.updateMany(findObject, { $set: updateObject })];
+                    case 1:
+                        /*let result = */ _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    DbModule.prototype.getFullUserInfo = function (token) {
+        return __awaiter(this, void 0, void 0, function () {
+            var user, result;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getUserByToken(token)];
+                    case 1:
+                        user = (_a.sent()).toObject();
+                        ;
+                        result = {
+                            _id: user._id,
+                            username: user.username,
+                            email: user.email,
+                            token: token,
+                            name: user.name
+                        };
+                        return [2 /*return*/, result];
                 }
             });
         });

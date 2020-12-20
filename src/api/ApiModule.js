@@ -268,6 +268,30 @@ var ApiModule = /** @class */ (function () {
                                 }
                             });
                         }); });
+                        this.app.post('/user.validatetoken', function (request, response) { return __awaiter(_this, void 0, void 0, function () {
+                            var result;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, this.validateToken(request.body['token'])];
+                                    case 1:
+                                        result = _a.sent();
+                                        response.send(result);
+                                        return [2 /*return*/];
+                                }
+                            });
+                        }); });
+                        this.app.post('/user.getfullinfo', function (request, response) { return __awaiter(_this, void 0, void 0, function () {
+                            var result;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, this.getFullInfo(request.body['token'])];
+                                    case 1:
+                                        result = _a.sent();
+                                        response.send(result);
+                                        return [2 /*return*/];
+                                }
+                            });
+                        }); });
                         this.app.listen(this.port);
                         return [4 /*yield*/, this.dbModule.setup()];
                     case 1:
@@ -277,9 +301,53 @@ var ApiModule = /** @class */ (function () {
             });
         });
     };
+    ApiModule.prototype.getFullInfo = function (token) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response, result, error_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        if (!this.dbModule.checkStringToken(token, 'user.getfullinfo'))
+                            throw new Errors_1.ScopeError('Check token scope.');
+                        return [4 /*yield*/, this.dbModule.getFullUserInfo(token)];
+                    case 1:
+                        result = _a.sent();
+                        response = Response_1.Response.fromSuccessData(result);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        error_1 = _a.sent();
+                        response = Response_1.Response.fromError(error_1);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/, response];
+                }
+            });
+        });
+    };
+    ApiModule.prototype.validateToken = function (token) {
+        return __awaiter(this, void 0, void 0, function () {
+            var response, result, error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, this.dbModule.validateStringToken(token)];
+                    case 1:
+                        result = _a.sent();
+                        response = Response_1.Response.fromSuccessData(result);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        error_2 = _a.sent();
+                        response = Response_1.Response.fromError(error_2);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/, response];
+                }
+            });
+        });
+    };
     ApiModule.prototype.authGetToken = function (email, password, scope, expiresIn) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, user, intScope, intExpiresIn, data, error_1;
+            var response, user, intScope, intExpiresIn, data, error_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -306,9 +374,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(data);
                         return [3 /*break*/, 5];
                     case 4:
-                        error_1 = _a.sent();
-                        console.log(error_1);
-                        response = Response_1.Response.fromError(error_1);
+                        error_3 = _a.sent();
+                        console.log(error_3);
+                        response = Response_1.Response.fromError(error_3);
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/, response];
                 }
@@ -317,7 +385,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.authRegister = function (email, password, username, name) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, error_2;
+            var response, error_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -328,9 +396,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData();
                         return [3 /*break*/, 3];
                     case 2:
-                        error_2 = _a.sent();
-                        console.log(error_2);
-                        response = Response_1.Response.fromError(error_2);
+                        error_4 = _a.sent();
+                        console.log(error_4);
+                        response = Response_1.Response.fromError(error_4);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/, response];
                 }
@@ -339,7 +407,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.messagesSend = function (token, username, content) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, message, _a, _b, error_3;
+            var response, message, _a, _b, error_5;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -354,9 +422,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData();
                         return [3 /*break*/, 4];
                     case 3:
-                        error_3 = _c.sent();
-                        console.log(error_3);
-                        response = Response_1.Response.fromError(error_3.message);
+                        error_5 = _c.sent();
+                        console.log(error_5);
+                        response = Response_1.Response.fromError(error_5.message);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/, response];
                 }
@@ -365,7 +433,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.messagesGetUnread = function (token, username) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, result, _a, _b, _c, _d, _e, error_4;
+            var response, result, _a, _b, _c, _d, _e, error_6;
             return __generator(this, function (_f) {
                 switch (_f.label) {
                     case 0:
@@ -385,9 +453,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(result);
                         return [3 /*break*/, 5];
                     case 4:
-                        error_4 = _f.sent();
-                        console.log(error_4);
-                        response = Response_1.Response.fromError(error_4);
+                        error_6 = _f.sent();
+                        console.log(error_6);
+                        response = Response_1.Response.fromError(error_6);
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/, response];
                 }
@@ -396,7 +464,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.messagesGet = function (token, username, from, to) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, fromNumber, toNumber, result, _a, _b, _c, _d, _e, error_5;
+            var response, fromNumber, toNumber, result, _a, _b, _c, _d, _e, error_7;
             return __generator(this, function (_f) {
                 switch (_f.label) {
                     case 0:
@@ -423,9 +491,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(result);
                         return [3 /*break*/, 5];
                     case 4:
-                        error_5 = _f.sent();
-                        console.log(error_5);
-                        response = Response_1.Response.fromError(error_5);
+                        error_7 = _f.sent();
+                        console.log(error_7);
+                        response = Response_1.Response.fromError(error_7);
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/, response];
                 }
@@ -434,7 +502,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.messagesGetLastMessages = function (token, username, numberOfMessagesString) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, numberofmessages, result, _a, _b, error_6;
+            var response, numberofmessages, result, _a, _b, error_8;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -452,9 +520,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(result);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_6 = _c.sent();
-                        console.log(error_6);
-                        response = Response_1.Response.fromError(error_6);
+                        error_8 = _c.sent();
+                        console.log(error_8);
+                        response = Response_1.Response.fromError(error_8);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/, response];
                 }
@@ -481,19 +549,30 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.messagesMarkAsRead = function (token, username) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, result;
-            return __generator(this, function (_a) {
-                try {
-                    if (!this.dbModule.checkStringToken(token, 'messages.markasread'))
-                        throw new Errors_1.ScopeError('Check token scope.');
-                    result = successMessage;
-                    response = Response_1.Response.fromSuccessData();
+            var response, result, _a, _b, _c, error_9;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
+                    case 0:
+                        _d.trys.push([0, 4, , 5]);
+                        if (!this.dbModule.checkStringToken(token, 'messages.markasread'))
+                            throw new Errors_1.ScopeError('Check token scope.');
+                        _b = (_a = this.dbModule).markAsRead;
+                        return [4 /*yield*/, this.dbModule.getUserByToken(token)];
+                    case 1:
+                        _c = [(_d.sent()).toObject()._id];
+                        return [4 /*yield*/, this.dbModule.getUserByUsername(username)];
+                    case 2: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.sent()).toObject()._id]))];
+                    case 3:
+                        result = _d.sent();
+                        response = Response_1.Response.fromSuccessData(result);
+                        return [3 /*break*/, 5];
+                    case 4:
+                        error_9 = _d.sent();
+                        console.log(error_9);
+                        response = Response_1.Response.fromError(error_9);
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/, response];
                 }
-                catch (error) {
-                    console.log(error);
-                    response = Response_1.Response.fromError(error);
-                }
-                return [2 /*return*/, response];
             });
         });
     };
@@ -518,7 +597,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.userGetName = function (username) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, result, error_7;
+            var response, result, error_10;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -529,9 +608,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(result.toObject().name);
                         return [3 /*break*/, 3];
                     case 2:
-                        error_7 = _a.sent();
-                        console.log(error_7);
-                        response = Response_1.Response.fromError(error_7);
+                        error_10 = _a.sent();
+                        console.log(error_10);
+                        response = Response_1.Response.fromError(error_10);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/, response];
                 }
@@ -540,7 +619,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.userGetBlocked = function (token) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, result, _a, _b, error_8;
+            var response, result, _a, _b, error_11;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -555,9 +634,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData();
                         return [3 /*break*/, 4];
                     case 3:
-                        error_8 = _c.sent();
-                        console.log(error_8);
-                        response = Response_1.Response.fromError(error_8);
+                        error_11 = _c.sent();
+                        console.log(error_11);
+                        response = Response_1.Response.fromError(error_11);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/, response];
                 }
@@ -566,7 +645,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.userGetDialogues = function (token) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, data, _a, _b, error_9;
+            var response, data, _a, _b, error_12;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -581,9 +660,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(data);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_9 = _c.sent();
-                        console.log(error_9);
-                        response = Response_1.Response.fromError(error_9);
+                        error_12 = _c.sent();
+                        console.log(error_12);
+                        response = Response_1.Response.fromError(error_12);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/, response];
                 }
@@ -592,7 +671,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.userChangeName = function (token, currentName, newName) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, data, error_10;
+            var response, data, error_13;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -605,9 +684,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(data);
                         return [3 /*break*/, 3];
                     case 2:
-                        error_10 = _a.sent();
-                        console.log(error_10);
-                        response = Response_1.Response.fromError(error_10);
+                        error_13 = _a.sent();
+                        console.log(error_13);
+                        response = Response_1.Response.fromError(error_13);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/, response];
                 }
@@ -616,7 +695,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.userChangePassword = function (token, currentPassword, newPassword) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, data, error_11;
+            var response, data, error_14;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -629,9 +708,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(data);
                         return [3 /*break*/, 3];
                     case 2:
-                        error_11 = _a.sent();
-                        console.log(error_11);
-                        response = Response_1.Response.fromError(error_11);
+                        error_14 = _a.sent();
+                        console.log(error_14);
+                        response = Response_1.Response.fromError(error_14);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/, response];
                 }
@@ -640,7 +719,7 @@ var ApiModule = /** @class */ (function () {
     };
     ApiModule.prototype.userBlock = function (token, username) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, data, _a, _b, error_12;
+            var response, data, _a, _b, error_15;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
@@ -655,9 +734,9 @@ var ApiModule = /** @class */ (function () {
                         response = Response_1.Response.fromSuccessData(data);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_12 = _c.sent();
-                        console.log(error_12);
-                        response = Response_1.Response.fromError(error_12);
+                        error_15 = _c.sent();
+                        console.log(error_15);
+                        response = Response_1.Response.fromError(error_15);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/, response];
                 }
