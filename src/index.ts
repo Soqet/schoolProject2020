@@ -2,9 +2,10 @@ import ApiModule from './api/ApiModule';
 import DbModule from './db/DbModule';
 
 const {
-  port,
   uri
 } = process.env;
+
+const port = process.env.PORT || process.env.port
 
 let dbModule = new DbModule(uri as string);
 let apiModule = new ApiModule(parseInt(port as string), dbModule);
