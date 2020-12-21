@@ -374,50 +374,77 @@ export default class DbModule {
     let firstMessages = (await this.getMessagesById(firstId)).toObject().histories.get(secondId);
     let secondMessages = (await this.getMessagesById(secondId)).toObject().histories.get(firstId);
     //console.log(firstMessages, secondMessages)
-    if(!!firstMessages) firstMessages = firstMessages.messages.reverse();
-    if(!!secondMessages) secondMessages= secondMessages.messages.reverse();
+    if(!!firstMessages) firstMessages = firstMessages.messages.reverse() || [];
+    if(!!secondMessages) secondMessages= secondMessages.messages.reverse() || [];
     console.log(firstMessages, secondMessages);
     if(!firstMessages && !secondMessages) {
       throw new DbError('Users have not messages with each other.');
     }
     const firstUsername = (await this.getUserById(firstId)).toObject().username;
     const secondUsername = (await this.getUserById(secondId)).toObject().username;
-    const result = new Array<IMessage>();
+    let result = new Array<IMessage>();
     let firstCounter = 0;
     let secondCounter = 0;
-    for(let i = 0; (i <= toNumber) && (!!firstMessages || !!secondMessages); i++) {
+    /*for(let i = 0; (i <= toNumber) && (!!firstMessages || !!secondMessages); i++) {
       //console.log(firstMessages[firstCounter]?.date, secondMessages[secondCounter]?.date);
-      if((!!firstMessages && !!firstMessages[firstCounter]) 
-        && ((!secondMessages || !secondMessages[secondCounter]) 
-        || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
-        //let message: IMessage = firstMessages[firstCounter].toObject();
-        //console.log(message);
-        //if(!!message) {
-        //  message.fromUsername = firstUsername;
-        //  message.toUsername = secondUsername;
-        //}
-        //console.log(message)
+      if(this.compareMessagesDates(firstMessages, firstCounter, secondMessages, secondCounter)) {
         result.push({...firstMessages[firstCounter]?.toObject(), fromUsername: firstUsername, toUsername: secondUsername});
         firstCounter++;
-      } else if (!!secondMessages && !!secondMessages[secondCounter]) {
-        // let message: IMessage = secondMessages[secondCounter];
-        // if(!!message) {
-        //   message.fromUsername = secondUsername;
-        //   message.toUsername = firstUsername;
-        // }
+      } else if (this.compareMessagesDates(secondMessages, secondCounter, firstMessages, firstCounter)) {
         result.push({...secondMessages[secondCounter]?.toObject(), fromUsername: secondUsername, toUsername: firstUsername});
         secondCounter++;
       } else {
         result.push(null as any as IMessage);
         break;
       }
-    }
+      if(!result[result.length - 1]?.hasOwnProperty('content')) {
+        result[result.length - 1] = null as any as IMessage;
+        break;
+      }
+    }*/
+    //if (!firstMessages) firstMessages = [];
+    //if (!secondMessages) secondMessages = [];
+    //console.log(firstMessages, secondMessages);
+    //
+    // firstMessages.forEach((element: IMessage) => {
+    //   element.fromUsername = firstUsername;
+    //   element.toUsername = secondUsername;
+    //   console.log(1);
+    // });
+    // secondMessages.forEach((element: IMessage) => {
+    //   element.fromUsername = secondUsername;
+    //   element.toUsername = firstUsername;
+    //   console.log(2)
+    // });
+    firstMessages = firstMessages.map((obj: any) => ({ ...obj.toObject(), fromUsername: firstUsername, toUsername: secondUsername }));
+    secondMessages = secondMessages.map((obj: any) => ({ ...obj.toObject(), fromUsername: secondUsername, toUsername: firstUsername }));
+    let allMessages = [...firstMessages, ...secondMessages].sort((a, b) => {
+      if(a.date < b.date) {
+        return -1;
+      }
+      if (a.date > b.date){ 
+        return 1;
+      }
+      return 0;
+    });
+
     if(!result[result.length - 1]?.hasOwnProperty('content')) {
       result[result.length - 1] = null as any as IMessage;
     }
-    console.log(result)
+    result = allMessages;
+    //console.log(result)
     //result.reverse();
     return result.slice(fromNumber, toNumber + 1);
+  }
+
+  compareMessagesDates(first: any, firstIndex: number, second: any, secondIndex: number) {
+    if(!first || !first[firstIndex]) {
+      return false;
+    }
+    if(!second || !second[secondIndex]) {
+      return true;
+    }
+    return (parseInt(first[firstIndex].date) < parseInt(second[secondIndex].date));
   }
 
   async changeId(model: mongoose.Model<mongoose.Document, {}>, document: mongoose.Document) {

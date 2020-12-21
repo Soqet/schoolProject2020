@@ -65,6 +65,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArrays = (this && this.__spreadArrays) || function () {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -652,73 +659,96 @@ var DbModule = /** @class */ (function () {
         });
     };
     DbModule.prototype.getAllMessages = function (firstId, secondId, fromNumber, toNumber) {
-        var _a, _b, _c;
+        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var firstMessages, secondMessages, firstUsername, secondUsername, result, firstCounter, secondCounter, i;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var firstMessages, secondMessages, firstUsername, secondUsername, result, firstCounter, secondCounter, allMessages;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.getMessagesById(firstId)];
                     case 1:
-                        firstMessages = (_d.sent()).toObject().histories.get(secondId);
+                        firstMessages = (_b.sent()).toObject().histories.get(secondId);
                         return [4 /*yield*/, this.getMessagesById(secondId)];
                     case 2:
-                        secondMessages = (_d.sent()).toObject().histories.get(firstId);
+                        secondMessages = (_b.sent()).toObject().histories.get(firstId);
                         //console.log(firstMessages, secondMessages)
                         if (!!firstMessages)
-                            firstMessages = firstMessages.messages.reverse();
+                            firstMessages = firstMessages.messages.reverse() || [];
                         if (!!secondMessages)
-                            secondMessages = secondMessages.messages.reverse();
+                            secondMessages = secondMessages.messages.reverse() || [];
                         console.log(firstMessages, secondMessages);
                         if (!firstMessages && !secondMessages) {
                             throw new Errors_1.DbError('Users have not messages with each other.');
                         }
                         return [4 /*yield*/, this.getUserById(firstId)];
                     case 3:
-                        firstUsername = (_d.sent()).toObject().username;
+                        firstUsername = (_b.sent()).toObject().username;
                         return [4 /*yield*/, this.getUserById(secondId)];
                     case 4:
-                        secondUsername = (_d.sent()).toObject().username;
+                        secondUsername = (_b.sent()).toObject().username;
                         result = new Array();
                         firstCounter = 0;
                         secondCounter = 0;
-                        for (i = 0; (i <= toNumber) && (!!firstMessages || !!secondMessages); i++) {
-                            //console.log(firstMessages[firstCounter]?.date, secondMessages[secondCounter]?.date);
-                            if ((!!firstMessages && !!firstMessages[firstCounter])
-                                && ((!secondMessages || !secondMessages[secondCounter])
-                                    || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
-                                //let message: IMessage = firstMessages[firstCounter].toObject();
-                                //console.log(message);
-                                //if(!!message) {
-                                //  message.fromUsername = firstUsername;
-                                //  message.toUsername = secondUsername;
-                                //}
-                                //console.log(message)
-                                result.push(__assign(__assign({}, (_a = firstMessages[firstCounter]) === null || _a === void 0 ? void 0 : _a.toObject()), { fromUsername: firstUsername, toUsername: secondUsername }));
-                                firstCounter++;
+                        /*for(let i = 0; (i <= toNumber) && (!!firstMessages || !!secondMessages); i++) {
+                          //console.log(firstMessages[firstCounter]?.date, secondMessages[secondCounter]?.date);
+                          if(this.compareMessagesDates(firstMessages, firstCounter, secondMessages, secondCounter)) {
+                            result.push({...firstMessages[firstCounter]?.toObject(), fromUsername: firstUsername, toUsername: secondUsername});
+                            firstCounter++;
+                          } else if (this.compareMessagesDates(secondMessages, secondCounter, firstMessages, firstCounter)) {
+                            result.push({...secondMessages[secondCounter]?.toObject(), fromUsername: secondUsername, toUsername: firstUsername});
+                            secondCounter++;
+                          } else {
+                            result.push(null as any as IMessage);
+                            break;
+                          }
+                          if(!result[result.length - 1]?.hasOwnProperty('content')) {
+                            result[result.length - 1] = null as any as IMessage;
+                            break;
+                          }
+                        }*/
+                        //if (!firstMessages) firstMessages = [];
+                        //if (!secondMessages) secondMessages = [];
+                        //console.log(firstMessages, secondMessages);
+                        //
+                        // firstMessages.forEach((element: IMessage) => {
+                        //   element.fromUsername = firstUsername;
+                        //   element.toUsername = secondUsername;
+                        //   console.log(1);
+                        // });
+                        // secondMessages.forEach((element: IMessage) => {
+                        //   element.fromUsername = secondUsername;
+                        //   element.toUsername = firstUsername;
+                        //   console.log(2)
+                        // });
+                        firstMessages = firstMessages.map(function (obj) { return (__assign(__assign({}, obj.toObject()), { fromUsername: firstUsername, toUsername: secondUsername })); });
+                        secondMessages = secondMessages.map(function (obj) { return (__assign(__assign({}, obj.toObject()), { fromUsername: secondUsername, toUsername: firstUsername })); });
+                        allMessages = __spreadArrays(firstMessages, secondMessages).sort(function (a, b) {
+                            if (a.date < b.date) {
+                                return -1;
                             }
-                            else if (!!secondMessages && !!secondMessages[secondCounter]) {
-                                // let message: IMessage = secondMessages[secondCounter];
-                                // if(!!message) {
-                                //   message.fromUsername = secondUsername;
-                                //   message.toUsername = firstUsername;
-                                // }
-                                result.push(__assign(__assign({}, (_b = secondMessages[secondCounter]) === null || _b === void 0 ? void 0 : _b.toObject()), { fromUsername: secondUsername, toUsername: firstUsername }));
-                                secondCounter++;
+                            if (a.date > b.date) {
+                                return 1;
                             }
-                            else {
-                                result.push(null);
-                                break;
-                            }
-                        }
-                        if (!((_c = result[result.length - 1]) === null || _c === void 0 ? void 0 : _c.hasOwnProperty('content'))) {
+                            return 0;
+                        });
+                        if (!((_a = result[result.length - 1]) === null || _a === void 0 ? void 0 : _a.hasOwnProperty('content'))) {
                             result[result.length - 1] = null;
                         }
-                        console.log(result);
+                        result = allMessages;
+                        //console.log(result)
                         //result.reverse();
                         return [2 /*return*/, result.slice(fromNumber, toNumber + 1)];
                 }
             });
         });
+    };
+    DbModule.prototype.compareMessagesDates = function (first, firstIndex, second, secondIndex) {
+        if (!first || !first[firstIndex]) {
+            return false;
+        }
+        if (!second || !second[secondIndex]) {
+            return true;
+        }
+        return (parseInt(first[firstIndex].date) < parseInt(second[secondIndex].date));
     };
     DbModule.prototype.changeId = function (model, document) {
         return __awaiter(this, void 0, void 0, function () {
