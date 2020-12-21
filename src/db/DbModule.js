@@ -589,7 +589,7 @@ var DbModule = /** @class */ (function () {
                         return [4 /*yield*/, this.getBlocked(toUserDoc)];
                     case 3:
                         toUserBlocked = _b.sent();
-                        if (userBlocked.includes({ username: user.toObject().username }))
+                        if (toUserBlocked.includes({ username: user.toObject().username }))
                             throw new Errors_1.DbError('You blocked by this user.');
                         _a = String;
                         return [4 /*yield*/, this.getUserByUsername(toUsername)];
@@ -616,6 +616,9 @@ var DbModule = /** @class */ (function () {
                         _b.sent();
                         return [4 /*yield*/, this.addNewDialogue(user, toUsername)];
                     case 7:
+                        _b.sent();
+                        return [4 /*yield*/, this.addNewDialogue(toUserDoc, user.toObject().username)];
+                    case 8:
                         _b.sent();
                         return [2 /*return*/];
                 }
@@ -649,17 +652,17 @@ var DbModule = /** @class */ (function () {
         });
     };
     DbModule.prototype.getAllMessages = function (firstId, secondId, fromNumber, toNumber) {
-        var _a, _b, _c, _d;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
             var firstMessages, secondMessages, firstUsername, secondUsername, result, firstCounter, secondCounter, i;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0: return [4 /*yield*/, this.getMessagesById(firstId)];
                     case 1:
-                        firstMessages = (_e.sent()).toObject().histories.get(secondId);
+                        firstMessages = (_c.sent()).toObject().histories.get(secondId);
                         return [4 /*yield*/, this.getMessagesById(secondId)];
                     case 2:
-                        secondMessages = (_e.sent()).toObject().histories.get(firstId);
+                        secondMessages = (_c.sent()).toObject().histories.get(firstId);
                         //console.log(firstMessages, secondMessages)
                         if (!!firstMessages)
                             firstMessages = firstMessages.messages.reverse();
@@ -671,15 +674,15 @@ var DbModule = /** @class */ (function () {
                         }
                         return [4 /*yield*/, this.getUserById(firstId)];
                     case 3:
-                        firstUsername = (_e.sent()).toObject().username;
+                        firstUsername = (_c.sent()).toObject().username;
                         return [4 /*yield*/, this.getUserById(secondId)];
                     case 4:
-                        secondUsername = (_e.sent()).toObject().username;
+                        secondUsername = (_c.sent()).toObject().username;
                         result = new Array();
                         firstCounter = 0;
                         secondCounter = 0;
                         for (i = 0; i <= toNumber; i++) {
-                            console.log((_a = firstMessages[firstCounter]) === null || _a === void 0 ? void 0 : _a.date, (_b = secondMessages[secondCounter]) === null || _b === void 0 ? void 0 : _b.date);
+                            //console.log(firstMessages[firstCounter]?.date, secondMessages[secondCounter]?.date);
                             if (!!firstMessages[firstCounter] && (!secondMessages[secondCounter] || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
                                 //let message: IMessage = firstMessages[firstCounter].toObject();
                                 //console.log(message);
@@ -688,7 +691,7 @@ var DbModule = /** @class */ (function () {
                                 //  message.toUsername = secondUsername;
                                 //}
                                 //console.log(message)
-                                result.push(__assign(__assign({}, (_c = firstMessages[firstCounter]) === null || _c === void 0 ? void 0 : _c.toObject()), { fromUsername: firstUsername, toUsername: secondUsername }));
+                                result.push(__assign(__assign({}, (_a = firstMessages[firstCounter]) === null || _a === void 0 ? void 0 : _a.toObject()), { fromUsername: firstUsername, toUsername: secondUsername }));
                                 firstCounter++;
                             }
                             else {
@@ -697,7 +700,7 @@ var DbModule = /** @class */ (function () {
                                 //   message.fromUsername = secondUsername;
                                 //   message.toUsername = firstUsername;
                                 // }
-                                result.push(__assign(__assign({}, (_d = secondMessages[secondCounter]) === null || _d === void 0 ? void 0 : _d.toObject()), { fromUsername: secondUsername, toUsername: firstUsername }));
+                                result.push(__assign(__assign({}, (_b = secondMessages[secondCounter]) === null || _b === void 0 ? void 0 : _b.toObject()), { fromUsername: secondUsername, toUsername: firstUsername }));
                                 secondCounter++;
                             }
                             if (!result[result.length - 1].hasOwnProperty('content')) {
