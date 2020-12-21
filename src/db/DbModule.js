@@ -652,38 +652,40 @@ var DbModule = /** @class */ (function () {
         });
     };
     DbModule.prototype.getAllMessages = function (firstId, secondId, fromNumber, toNumber) {
-        var _a, _b;
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function () {
             var firstMessages, secondMessages, firstUsername, secondUsername, result, firstCounter, secondCounter, i;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0: return [4 /*yield*/, this.getMessagesById(firstId)];
                     case 1:
-                        firstMessages = (_c.sent()).toObject().histories.get(secondId);
+                        firstMessages = (_d.sent()).toObject().histories.get(secondId);
                         return [4 /*yield*/, this.getMessagesById(secondId)];
                     case 2:
-                        secondMessages = (_c.sent()).toObject().histories.get(firstId);
+                        secondMessages = (_d.sent()).toObject().histories.get(firstId);
                         //console.log(firstMessages, secondMessages)
                         if (!!firstMessages)
                             firstMessages = firstMessages.messages.reverse();
                         if (!!secondMessages)
                             secondMessages = secondMessages.messages.reverse();
-                        //console.log(firstMessages, secondMessages);
+                        console.log(firstMessages, secondMessages);
                         if (!firstMessages && !secondMessages) {
                             throw new Errors_1.DbError('Users have not messages with each other.');
                         }
                         return [4 /*yield*/, this.getUserById(firstId)];
                     case 3:
-                        firstUsername = (_c.sent()).toObject().username;
+                        firstUsername = (_d.sent()).toObject().username;
                         return [4 /*yield*/, this.getUserById(secondId)];
                     case 4:
-                        secondUsername = (_c.sent()).toObject().username;
+                        secondUsername = (_d.sent()).toObject().username;
                         result = new Array();
                         firstCounter = 0;
                         secondCounter = 0;
-                        for (i = 0; i <= toNumber; i++) {
+                        for (i = 0; (i <= toNumber) && (!!firstMessages || !!secondMessages); i++) {
                             //console.log(firstMessages[firstCounter]?.date, secondMessages[secondCounter]?.date);
-                            if (!!firstMessages[firstCounter] && (!secondMessages[secondCounter] || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
+                            if ((!!firstMessages && !!firstMessages[firstCounter])
+                                && ((!secondMessages || !secondMessages[secondCounter])
+                                    || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
                                 //let message: IMessage = firstMessages[firstCounter].toObject();
                                 //console.log(message);
                                 //if(!!message) {
@@ -694,7 +696,7 @@ var DbModule = /** @class */ (function () {
                                 result.push(__assign(__assign({}, (_a = firstMessages[firstCounter]) === null || _a === void 0 ? void 0 : _a.toObject()), { fromUsername: firstUsername, toUsername: secondUsername }));
                                 firstCounter++;
                             }
-                            else {
+                            else if (!!secondMessages && !!secondMessages[secondCounter]) {
                                 // let message: IMessage = secondMessages[secondCounter];
                                 // if(!!message) {
                                 //   message.fromUsername = secondUsername;
@@ -703,10 +705,13 @@ var DbModule = /** @class */ (function () {
                                 result.push(__assign(__assign({}, (_b = secondMessages[secondCounter]) === null || _b === void 0 ? void 0 : _b.toObject()), { fromUsername: secondUsername, toUsername: firstUsername }));
                                 secondCounter++;
                             }
-                            if (!result[result.length - 1].hasOwnProperty('content')) {
-                                result[result.length - 1] = null;
+                            else {
+                                result.push(null);
                                 break;
                             }
+                        }
+                        if (!((_c = result[result.length - 1]) === null || _c === void 0 ? void 0 : _c.hasOwnProperty('content'))) {
+                            result[result.length - 1] = null;
                         }
                         console.log(result);
                         //result.reverse();

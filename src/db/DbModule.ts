@@ -376,7 +376,7 @@ export default class DbModule {
     //console.log(firstMessages, secondMessages)
     if(!!firstMessages) firstMessages = firstMessages.messages.reverse();
     if(!!secondMessages) secondMessages= secondMessages.messages.reverse();
-    //console.log(firstMessages, secondMessages);
+    console.log(firstMessages, secondMessages);
     if(!firstMessages && !secondMessages) {
       throw new DbError('Users have not messages with each other.');
     }
@@ -385,9 +385,11 @@ export default class DbModule {
     const result = new Array<IMessage>();
     let firstCounter = 0;
     let secondCounter = 0;
-    for(let i = 0; i <= toNumber; i++) {
+    for(let i = 0; (i <= toNumber) && (!!firstMessages || !!secondMessages); i++) {
       //console.log(firstMessages[firstCounter]?.date, secondMessages[secondCounter]?.date);
-      if(!!firstMessages[firstCounter] && (!secondMessages[secondCounter] || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
+      if((!!firstMessages && !!firstMessages[firstCounter]) 
+        && ((!secondMessages || !secondMessages[secondCounter]) 
+        || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
         //let message: IMessage = firstMessages[firstCounter].toObject();
         //console.log(message);
         //if(!!message) {
@@ -397,7 +399,7 @@ export default class DbModule {
         //console.log(message)
         result.push({...firstMessages[firstCounter]?.toObject(), fromUsername: firstUsername, toUsername: secondUsername});
         firstCounter++;
-      } else {
+      } else if (!!secondMessages && !!secondMessages[secondCounter]) {
         // let message: IMessage = secondMessages[secondCounter];
         // if(!!message) {
         //   message.fromUsername = secondUsername;
@@ -405,11 +407,13 @@ export default class DbModule {
         // }
         result.push({...secondMessages[secondCounter]?.toObject(), fromUsername: secondUsername, toUsername: firstUsername});
         secondCounter++;
-      }
-      if(!result[result.length - 1].hasOwnProperty('content')) {
-        result[result.length - 1] = null as any as IMessage;
+      } else {
+        result.push(null as any as IMessage);
         break;
       }
+    }
+    if(!result[result.length - 1]?.hasOwnProperty('content')) {
+      result[result.length - 1] = null as any as IMessage;
     }
     console.log(result)
     //result.reverse();
