@@ -12,7 +12,6 @@ let userSchema = new mongoose.Schema({
     {
       user: {
         type: ObjectId,
-        unique: true,
         ref: 'user'
       }
     }
@@ -21,7 +20,6 @@ let userSchema = new mongoose.Schema({
     {
       user: {
         type: ObjectId,
-        unique: true,
         ref: 'user'
       }
     }

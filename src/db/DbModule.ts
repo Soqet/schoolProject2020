@@ -473,7 +473,9 @@ export default class DbModule {
     //let conversationObject = conversations.toObject();
     //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
     try {
-      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $push: { blocked: {user: (await this.getUserByUsername(username)).toObject()._id }}});
+      if(!(await conversationModel.findOne({'_id': conversations.toObject()._id, 'blocked.user': (await this.getUserByUsername(username)).toObject()._id}))) {
+        await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $push: { blocked: {user: (await this.getUserByUsername(username)).toObject()._id }}});
+      }
     } catch (error) {}
   }
 
@@ -549,8 +551,12 @@ export default class DbModule {
     let conversations = await this.getConversationsByUser(user);
     //let conversationObject = conversations.toObject();
     //conversationObject.blocked.push((await this.getUserByUsername(username)).toObject()._id);
+    //console.log(await conversationModel.findOne({'_id': conversations.toObject()._id, 'dialogues.user': (await this.getUserByUsername(username)).toObject()._id}));
     try {
-      await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $push: { dialogues: {user: (await this.getUserByUsername(username)).toObject()._id }}});
+      if(!(await conversationModel.findOne({'_id': conversations.toObject()._id, 'dialogues.user': (await this.getUserByUsername(username)).toObject()._id}))) {
+        await conversationModel.updateOne({'_id': conversations.toObject()._id}, { $addToSet: { dialogues: {user: (await this.getUserByUsername(username)).toObject()._id }}});
+      }
+      
     } catch (error) {}
   }
 

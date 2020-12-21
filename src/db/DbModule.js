@@ -801,30 +801,38 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.blockUser = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
-            var conversations, _a, _b, _c, error_1;
-            var _d, _e, _f;
-            return __generator(this, function (_g) {
-                switch (_g.label) {
+            var conversations, _a, _b, _c, _d, _e, _f, error_1;
+            var _g, _h, _j, _k;
+            return __generator(this, function (_l) {
+                switch (_l.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
-                        conversations = _g.sent();
-                        _g.label = 2;
+                        conversations = _l.sent();
+                        _l.label = 2;
                     case 2:
-                        _g.trys.push([2, 5, , 6]);
-                        _b = (_a = conversationModel_1.default).updateOne;
-                        _c = [{ '_id': conversations.toObject()._id }];
-                        _d = {};
-                        _e = {};
-                        _f = {};
+                        _l.trys.push([2, 8, , 9]);
+                        _b = (_a = conversationModel_1.default).findOne;
+                        _g = { '_id': conversations.toObject()._id };
+                        _c = 'blocked.user';
                         return [4 /*yield*/, this.getUserByUsername(username)];
-                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.blocked = (_f.user = (_g.sent()).toObject()._id, _f), _e), _d)]))];
+                    case 3: return [4 /*yield*/, _b.apply(_a, [(_g[_c] = (_l.sent()).toObject()._id, _g)])];
                     case 4:
-                        _g.sent();
-                        return [3 /*break*/, 6];
-                    case 5:
-                        error_1 = _g.sent();
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        if (!!(_l.sent())) return [3 /*break*/, 7];
+                        _e = (_d = conversationModel_1.default).updateOne;
+                        _f = [{ '_id': conversations.toObject()._id }];
+                        _h = {};
+                        _j = {};
+                        _k = {};
+                        return [4 /*yield*/, this.getUserByUsername(username)];
+                    case 5: return [4 /*yield*/, _e.apply(_d, _f.concat([(_h.$push = (_j.blocked = (_k.user = (_l.sent()).toObject()._id, _k), _j), _h)]))];
+                    case 6:
+                        _l.sent();
+                        _l.label = 7;
+                    case 7: return [3 /*break*/, 9];
+                    case 8:
+                        error_1 = _l.sent();
+                        return [3 /*break*/, 9];
+                    case 9: return [2 /*return*/];
                 }
             });
         });
@@ -995,30 +1003,38 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.addNewDialogue = function (user, username) {
         return __awaiter(this, void 0, void 0, function () {
-            var conversations, _a, _b, _c, error_4;
-            var _d, _e, _f;
-            return __generator(this, function (_g) {
-                switch (_g.label) {
+            var conversations, _a, _b, _c, _d, _e, _f, error_4;
+            var _g, _h, _j, _k;
+            return __generator(this, function (_l) {
+                switch (_l.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
-                        conversations = _g.sent();
-                        _g.label = 2;
+                        conversations = _l.sent();
+                        _l.label = 2;
                     case 2:
-                        _g.trys.push([2, 5, , 6]);
-                        _b = (_a = conversationModel_1.default).updateOne;
-                        _c = [{ '_id': conversations.toObject()._id }];
-                        _d = {};
-                        _e = {};
-                        _f = {};
+                        _l.trys.push([2, 8, , 9]);
+                        _b = (_a = conversationModel_1.default).findOne;
+                        _g = { '_id': conversations.toObject()._id };
+                        _c = 'dialogues.user';
                         return [4 /*yield*/, this.getUserByUsername(username)];
-                    case 3: return [4 /*yield*/, _b.apply(_a, _c.concat([(_d.$push = (_e.dialogues = (_f.user = (_g.sent()).toObject()._id, _f), _e), _d)]))];
+                    case 3: return [4 /*yield*/, _b.apply(_a, [(_g[_c] = (_l.sent()).toObject()._id, _g)])];
                     case 4:
-                        _g.sent();
-                        return [3 /*break*/, 6];
-                    case 5:
-                        error_4 = _g.sent();
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        if (!!(_l.sent())) return [3 /*break*/, 7];
+                        _e = (_d = conversationModel_1.default).updateOne;
+                        _f = [{ '_id': conversations.toObject()._id }];
+                        _h = {};
+                        _j = {};
+                        _k = {};
+                        return [4 /*yield*/, this.getUserByUsername(username)];
+                    case 5: return [4 /*yield*/, _e.apply(_d, _f.concat([(_h.$addToSet = (_j.dialogues = (_k.user = (_l.sent()).toObject()._id, _k), _j), _h)]))];
+                    case 6:
+                        _l.sent();
+                        _l.label = 7;
+                    case 7: return [3 /*break*/, 9];
+                    case 8:
+                        error_4 = _l.sent();
+                        return [3 /*break*/, 9];
+                    case 9: return [2 /*return*/];
                 }
             });
         });
