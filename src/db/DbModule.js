@@ -672,9 +672,13 @@ var DbModule = /** @class */ (function () {
                         secondMessages = (_b.sent()).toObject().histories.get(firstId);
                         //console.log(firstMessages, secondMessages)
                         if (!!firstMessages)
-                            firstMessages = firstMessages.messages.reverse() || [];
+                            firstMessages = firstMessages.messages.reverse();
                         if (!!secondMessages)
-                            secondMessages = secondMessages.messages.reverse() || [];
+                            secondMessages = secondMessages.messages.reverse();
+                        if (!firstMessages)
+                            firstMessages = [];
+                        if (!secondMessages)
+                            secondMessages = [];
                         console.log(firstMessages, secondMessages);
                         if (!firstMessages && !secondMessages) {
                             throw new Errors_1.DbError('Users have not messages with each other.');

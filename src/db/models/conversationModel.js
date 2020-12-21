@@ -16,6 +16,7 @@ var userSchema = new mongoose_1.default.Schema({
         {
             user: {
                 type: ObjectId,
+                unique: true,
                 ref: 'user'
             }
         }
@@ -24,6 +25,7 @@ var userSchema = new mongoose_1.default.Schema({
         {
             user: {
                 type: ObjectId,
+                unique: true,
                 ref: 'user'
             }
         }
