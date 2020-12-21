@@ -596,7 +596,7 @@ var DbModule = /** @class */ (function () {
                     case 4:
                         toUserId = _a.apply(void 0, [(_b.sent()).toObject()._id]);
                         message = {};
-                        console.log(toUserId);
+                        //console.log(toUserId);
                         message["histories." + toUserId + ".messages"] = {
                             content: content,
                             date: Date.now().toString(),
@@ -649,17 +649,17 @@ var DbModule = /** @class */ (function () {
         });
     };
     DbModule.prototype.getAllMessages = function (firstId, secondId, fromNumber, toNumber) {
-        var _a, _b;
+        var _a, _b, _c, _d;
         return __awaiter(this, void 0, void 0, function () {
             var firstMessages, secondMessages, firstUsername, secondUsername, result, firstCounter, secondCounter, i;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0: return [4 /*yield*/, this.getMessagesById(firstId)];
                     case 1:
-                        firstMessages = (_c.sent()).toObject().histories.get(secondId);
+                        firstMessages = (_e.sent()).toObject().histories.get(secondId);
                         return [4 /*yield*/, this.getMessagesById(secondId)];
                     case 2:
-                        secondMessages = (_c.sent()).toObject().histories.get(firstId);
+                        secondMessages = (_e.sent()).toObject().histories.get(firstId);
                         //console.log(firstMessages, secondMessages)
                         if (!!firstMessages)
                             firstMessages = firstMessages.messages.reverse();
@@ -671,15 +671,16 @@ var DbModule = /** @class */ (function () {
                         }
                         return [4 /*yield*/, this.getUserById(firstId)];
                     case 3:
-                        firstUsername = (_c.sent()).toObject().username;
+                        firstUsername = (_e.sent()).toObject().username;
                         return [4 /*yield*/, this.getUserById(secondId)];
                     case 4:
-                        secondUsername = (_c.sent()).toObject().username;
+                        secondUsername = (_e.sent()).toObject().username;
                         result = new Array();
                         firstCounter = 0;
                         secondCounter = 0;
                         for (i = 0; i <= toNumber; i++) {
-                            if (!secondMessages || (firstMessages[firstCounter].date < secondMessages[secondCounter].date)) {
+                            console.log((_a = firstMessages[firstCounter]) === null || _a === void 0 ? void 0 : _a.date, (_b = secondMessages[secondCounter]) === null || _b === void 0 ? void 0 : _b.date);
+                            if (!!firstMessages[firstCounter] && (!secondMessages[secondCounter] || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
                                 //let message: IMessage = firstMessages[firstCounter].toObject();
                                 //console.log(message);
                                 //if(!!message) {
@@ -687,7 +688,7 @@ var DbModule = /** @class */ (function () {
                                 //  message.toUsername = secondUsername;
                                 //}
                                 //console.log(message)
-                                result.push(__assign(__assign({}, (_a = firstMessages[firstCounter]) === null || _a === void 0 ? void 0 : _a.toObject()), { fromUsername: firstUsername, toUsername: secondUsername }));
+                                result.push(__assign(__assign({}, (_c = firstMessages[firstCounter]) === null || _c === void 0 ? void 0 : _c.toObject()), { fromUsername: firstUsername, toUsername: secondUsername }));
                                 firstCounter++;
                             }
                             else {
@@ -696,7 +697,7 @@ var DbModule = /** @class */ (function () {
                                 //   message.fromUsername = secondUsername;
                                 //   message.toUsername = firstUsername;
                                 // }
-                                result.push(__assign(__assign({}, (_b = secondMessages[secondCounter]) === null || _b === void 0 ? void 0 : _b.toObject()), { fromUsername: secondUsername, toUsername: firstUsername }));
+                                result.push(__assign(__assign({}, (_d = secondMessages[secondCounter]) === null || _d === void 0 ? void 0 : _d.toObject()), { fromUsername: secondUsername, toUsername: firstUsername }));
                                 secondCounter++;
                             }
                             if (!result[result.length - 1].hasOwnProperty('content')) {
@@ -797,14 +798,14 @@ var DbModule = /** @class */ (function () {
                     case 1:
                         if (!(_i < array_1.length)) return [3 /*break*/, 4];
                         element = array_1[_i];
-                        console.log(element);
+                        //console.log(element)
                         _a = element;
                         return [4 /*yield*/, this.convertIdToUsername(String(element.user))];
                     case 2:
+                        //console.log(element)
                         _a.username = _b.sent();
                         element.user = undefined;
                         element._id = undefined;
-                        console.log(element);
                         _b.label = 3;
                     case 3:
                         _i++;
@@ -879,7 +880,7 @@ var DbModule = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        console.log(id);
+                        //console.log(id);
                         if (!id)
                             return [2 /*return*/, undefined];
                         return [4 /*yield*/, this.getUserById(id)];

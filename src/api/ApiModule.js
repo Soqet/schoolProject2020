@@ -152,7 +152,7 @@ var ApiModule = /** @class */ (function () {
                             var result;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
-                                    case 0: return [4 /*yield*/, this.messagesGetLastMessages(request.body['token'], request.body['username'], request.body['numberofmessages'])];
+                                    case 0: return [4 /*yield*/, this.messagesGetLastMessages(request.body['token'])];
                                     case 1:
                                         result = _a.sent();
                                         response.send(result);
@@ -500,18 +500,15 @@ var ApiModule = /** @class */ (function () {
             });
         });
     };
-    ApiModule.prototype.messagesGetLastMessages = function (token, username, numberOfMessagesString) {
+    ApiModule.prototype.messagesGetLastMessages = function (token) {
         return __awaiter(this, void 0, void 0, function () {
-            var response, numberofmessages, result, _a, _b, error_8;
+            var response, result, _a, _b, error_8;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         _c.trys.push([0, 3, , 4]);
                         if (!this.dbModule.checkStringToken(token, 'messages.getlastmessages'))
                             throw new Errors_1.ScopeError('Check token scope.');
-                        numberofmessages = parseInt(numberOfMessagesString);
-                        if (!!numberOfMessagesString)
-                            throw new Error('Wrong number of messges.');
                         _b = (_a = this.dbModule).getOneMessageFromEveryDialogue;
                         return [4 /*yield*/, this.dbModule.getUserByToken(token)];
                     case 1: return [4 /*yield*/, _b.apply(_a, [_c.sent()])];

@@ -326,7 +326,7 @@ export default class DbModule {
     //     }
     //   }}
     var message: IQuery = {};
-    console.log(toUserId);
+    //console.log(toUserId);
     message[`histories.${toUserId}.messages`] = {
         content: content,
         date: Date.now().toString(),
@@ -385,7 +385,8 @@ export default class DbModule {
     let firstCounter = 0;
     let secondCounter = 0;
     for(let i = 0; i <= toNumber; i++) {
-      if(!secondMessages || (firstMessages[firstCounter].date < secondMessages[secondCounter].date)) {
+      //console.log(firstMessages[firstCounter]?.date, secondMessages[secondCounter]?.date);
+      if(!!firstMessages[firstCounter] && (!secondMessages[secondCounter] || (firstMessages[firstCounter].date < secondMessages[secondCounter].date))) {
         //let message: IMessage = firstMessages[firstCounter].toObject();
         //console.log(message);
         //if(!!message) {
@@ -445,11 +446,11 @@ export default class DbModule {
   async convertArrayOfIdToUsernames(array: Array<any>) {
     //console.log(array);
     for (let element of array) {
-      console.log(element)
+      //console.log(element)
       element.username = await this.convertIdToUsername(String(element.user));
       element.user = undefined;
       element._id = undefined;
-      console.log(element)
+      //console.log(element)
     }
   }
 
@@ -486,7 +487,7 @@ export default class DbModule {
   }
 
   async convertIdToUsername(id?: string) {
-    console.log(id);
+    //console.log(id);
     if(!id) return undefined;
     const userDocument = await this.getUserById(id!);
     return userDocument.toObject().username;
