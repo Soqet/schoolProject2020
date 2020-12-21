@@ -290,7 +290,7 @@ export default class DbModule {
     if (userBlocked.includes({username: toUsername})) throw new DbError('You blocked this user.');
     const toUserDoc = await this.getUserByUsername(toUsername);
     const toUserBlocked = await this.getBlocked(toUserDoc);
-    if (userBlocked.includes({ username: user.toObject().username })) throw new DbError('You blocked by this user.');
+    if (toUserBlocked.includes({ username: user.toObject().username })) throw new DbError('You blocked by this user.');
     //let messages = await this.getMessagesByUser(user);
     let toUserId = String((await this.getUserByUsername(toUsername)).toObject()._id);
     /* try {
@@ -346,6 +346,7 @@ export default class DbModule {
       updateUnread
     );
     await this.addNewDialogue(user, toUsername);
+    await this.addNewDialogue(toUserDoc, user.toObject().username);
   }
 
   async getMessages(fromId: string, toId: string, amount?: number) { 
