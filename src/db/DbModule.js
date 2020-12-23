@@ -457,13 +457,14 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.getOneMessageFromEveryUnread = function (user) {
         return __awaiter(this, void 0, void 0, function () {
-            var conversations, userId, dialogues, result, _i, dialogues_1, id, messages;
+            var conversations, userId, username, dialogues, result, id, messages, _i, dialogues_1, dialogue;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.getConversationsByUser(user)];
                     case 1:
                         conversations = _a.sent();
-                        userId = user.toObject()._id;
+                        userId = String(user.toObject()._id);
+                        username = String(user.toObject().username);
                         return [4 /*yield*/, conversations.toObject().dialogues];
                     case 2:
                         dialogues = _a.sent();
@@ -472,12 +473,24 @@ var DbModule = /** @class */ (function () {
                         _a.label = 3;
                     case 3:
                         if (!(_i < dialogues_1.length)) return [3 /*break*/, 6];
-                        id = dialogues_1[_i];
-                        return [4 /*yield*/, this.getMessagesById(id)];
+                        dialogue = dialogues_1[_i];
+                        id = String(dialogue.user);
+                        return [4 /*yield*/, this.getUnreadWithUser(id, userId)];
                     case 4:
+                        // let messages = await this.getMessagesById(id);
+                        // console.log()
+                        // if(!!messages.toObject().histories.get(userId) && messages.toObject().histories.get(userId).unread) {
+                        //   result.push({...(messages.toObject().histories.get(userId).messages.slice(-1)), 
+                        //     fromUsername: (await (await this.getUserById(id)).toObject()).username,
+                        //     toUsername: (await user.toObject().username)
+                        //   });
+                        // }
                         messages = _a.sent();
-                        if (messages.toObject().histories.get(userId).unread) {
-                            result.push((messages.toObject().histories.get(userId).messages.slice(-1)));
+                        //console.log(messages)
+                        if (!!messages) {
+                            if (!!messages.messages[messages.messages.length - 1]) {
+                                result.push(messages.messages[messages.messages.length - 1]);
+                            }
                         }
                         _a.label = 5;
                     case 5:
@@ -633,10 +646,11 @@ var DbModule = /** @class */ (function () {
         });
     };
     DbModule.prototype.getMessages = function (fromId, toId, amount) {
+        var _a;
         return __awaiter(this, void 0, void 0, function () {
             var result, rawResult;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         result = {
                             fromId: fromId,
@@ -645,15 +659,20 @@ var DbModule = /** @class */ (function () {
                         };
                         return [4 /*yield*/, messagesModel_1.default.findOne({ fromId: fromId })];
                     case 1:
-                        rawResult = _a.sent();
+                        rawResult = (_a = (_b.sent())) === null || _a === void 0 ? void 0 : _a.toObject();
                         if (rawResult == null)
                             throw new Errors_1.DbError(fromId + " is unknonwn user id.");
-                        if (!amount)
-                            result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount);
-                        else
-                            result.messages = (rawResult.toObject().histories.get(toId).messages).reverse();
-                        //console.log(result)
-                        return [2 /*return*/, result];
+                        try {
+                            if (!amount)
+                                result.messages = (rawResult.histories.get(toId).messages.toObject()).slice(-amount);
+                            else
+                                result.messages = (rawResult.histories.get(toId).messages.toObject()).reverse();
+                        }
+                        finally {
+                            //console.log({...result})
+                            return [2 /*return*/, result];
+                        }
+                        return [2 /*return*/];
                 }
             });
         });
@@ -679,7 +698,7 @@ var DbModule = /** @class */ (function () {
                             firstMessages = [];
                         if (!secondMessages)
                             secondMessages = [];
-                        console.log(firstMessages, secondMessages);
+                        //console.log(firstMessages, secondMessages);
                         if (!firstMessages && !secondMessages) {
                             throw new Errors_1.DbError('Users have not messages with each other.');
                         }
@@ -901,25 +920,41 @@ var DbModule = /** @class */ (function () {
     };
     DbModule.prototype.getUnreadWithUser = function (fromId, toId) {
         return __awaiter(this, void 0, void 0, function () {
-            var messages, unreadMessages, _i, _a, message;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var messages, fromUsername, _a, toUsername, _b, unreadMessages, _i, _c, message;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0: return [4 /*yield*/, this.getMessages(fromId, toId)];
                     case 1:
-                        messages = _b.sent();
+                        messages = (_d.sent());
+                        _a = String;
+                        return [4 /*yield*/, this.getUserById(fromId)];
+                    case 2: return [4 /*yield*/, (_d.sent()).toObject().username];
+                    case 3:
+                        fromUsername = _a.apply(void 0, [_d.sent()]);
+                        _b = String;
+                        return [4 /*yield*/, this.getUserById(toId)];
+                    case 4: return [4 /*yield*/, (_d.sent()).toObject().username];
+                    case 5:
+                        toUsername = _b.apply(void 0, [_d.sent()]);
                         unreadMessages = {
                             fromId: fromId,
                             toId: toId,
                             messages: new Array()
                         };
-                        for (_i = 0, _a = messages.messages; _i < _a.length; _i++) {
-                            message = _a[_i];
-                            if (message.unread) {
-                                unreadMessages.messages.push(message);
+                        try {
+                            //console.log('cool1')
+                            for (_i = 0, _c = messages.messages; _i < _c.length; _i++) {
+                                message = _c[_i];
+                                if (message.unread) {
+                                    unreadMessages.messages.push(__assign(__assign({}, message), { fromUsername: fromUsername, toUsername: toUsername }));
+                                }
                             }
+                            //console.log('cool2')
                         }
-                        //console.log(unreadMessages);
-                        return [2 /*return*/, unreadMessages];
+                        finally {
+                            return [2 /*return*/, unreadMessages];
+                        }
+                        return [2 /*return*/];
                 }
             });
         });

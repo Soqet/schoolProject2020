@@ -39,7 +39,8 @@ var Scope = /** @class */ (function () {
             { methodName: 'user.getblocked', methodScope: ScopeBytes.readMessages },
             { methodName: 'user.getdialogues', methodScope: ScopeBytes.readMessages },
             { methodName: 'messages.get', methodScope: ScopeBytes.readMessages },
-            { methodName: 'user.getfullinfo', methodScope: ScopeBytes.getInfo }
+            { methodName: 'user.getfullinfo', methodScope: ScopeBytes.getInfo },
+            { methodName: 'messages.getlastunreads', methodScope: ScopeBytes.readMessages }
         ];
         if (!!scope) {
             this.scope = scope;

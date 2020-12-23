@@ -22,6 +22,7 @@ import { ObjectID } from "mongodb";
 import Scope, { ScopeBytes } from './Scope'
 import { isMappedTypeNode } from "typescript";
 import { raw } from "body-parser";
+import { messagesMarkAsRead } from "../api/messagesMethods";
 
 const ObjectId =  mongoose.Types.ObjectId;
 
@@ -219,13 +220,29 @@ export default class DbModule {
 
   async getOneMessageFromEveryUnread(user: mongoose.Document) {
     const conversations = await this.getConversationsByUser(user);
-    const userId = user.toObject()._id;
+    const userId = String(user.toObject()._id);
+    const username = String(user.toObject().username);
     const dialogues = await conversations.toObject().dialogues;
     const result = new Array<IMessage>();
-    for(let id of dialogues) {
-      let messages = await this.getMessagesById(id);
-      if(messages.toObject().histories.get(userId).unread) {
-        result.push((messages.toObject().histories.get(userId).messages.slice(-1)));
+    //console.log(dialogues)
+    let id;
+    let messages;
+    for(let dialogue of dialogues) {
+      id = String(dialogue.user)
+      // let messages = await this.getMessagesById(id);
+      // console.log()
+      // if(!!messages.toObject().histories.get(userId) && messages.toObject().histories.get(userId).unread) {
+      //   result.push({...(messages.toObject().histories.get(userId).messages.slice(-1)), 
+      //     fromUsername: (await (await this.getUserById(id)).toObject()).username,
+      //     toUsername: (await user.toObject().username)
+      //   });
+      // }
+      messages = await this.getUnreadWithUser(id, userId);
+      //console.log(messages)
+      if(!!messages) {
+        if (!!messages.messages[messages.messages.length - 1]) {
+          result.push(messages.messages[messages.messages.length - 1]);
+        }
       }
     }
     return result;
@@ -359,12 +376,15 @@ export default class DbModule {
     }
     //var findObject: IQuery = {};
     //findObject[`histories.${toId}`] = { $slice:  -amount }
-    var rawResult = await messagesModel.findOne({ fromId: fromId });
+    var rawResult = (await messagesModel.findOne({ fromId: fromId }))?.toObject();
     if (rawResult == null) throw new DbError(`${fromId} is unknonwn user id.`);
-    if(!amount) result.messages = (rawResult.toObject().histories.get(toId).messages).slice(-amount!);
-    else result.messages = (rawResult.toObject().histories.get(toId).messages).reverse();
-    //console.log(result)
-    return result;
+    try{
+      if(!amount) result.messages = (rawResult.histories.get(toId).messages.toObject()).slice(-amount!);
+      else result.messages = (rawResult.histories.get(toId).messages.toObject()).reverse();
+    } finally {
+      //console.log({...result})
+      return result;
+    }
   }
 
   async getAllMessages(firstId: string, secondId: string, fromNumber: number, toNumber: number) {
@@ -378,7 +398,7 @@ export default class DbModule {
     if(!!secondMessages) secondMessages= secondMessages.messages.reverse();
     if(!firstMessages) firstMessages = [];
     if(!secondMessages) secondMessages = [];
-    console.log(firstMessages, secondMessages);
+    //console.log(firstMessages, secondMessages);
     if(!firstMessages && !secondMessages) {
       throw new DbError('Users have not messages with each other.');
     }
@@ -506,20 +526,28 @@ export default class DbModule {
   }
 
   async getUnreadWithUser(fromId: string, toId: string) {
-    let messages = await this.getMessages(fromId, toId);
+    //console.log('cool0')
+    let messages = (await this.getMessages(fromId, toId));
+    const fromUsername = String(await (await this.getUserById(fromId)).toObject().username);
+    const toUsername = String(await (await this.getUserById(toId)).toObject().username);
+
     //console.log(messages)
     let unreadMessages: IMessages = {
       fromId: fromId,
       toId: toId,
       messages: new Array<IMessage>()
     };
-    for(let message of messages.messages) {
-      if(message.unread) {
-        unreadMessages.messages.push(message)
+    try{
+      //console.log('cool1')
+      for(let message of messages.messages) {
+        if(message.unread) {
+          unreadMessages.messages.push({...message, fromUsername: fromUsername, toUsername: toUsername})
+        }
       }
+      //console.log('cool2')
+    } finally {   
+      return unreadMessages;
     }
-    //console.log(unreadMessages);
-    return unreadMessages;
   }
 
   async convertIdToUsername(id?: string) {

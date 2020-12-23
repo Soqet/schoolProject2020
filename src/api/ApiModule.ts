@@ -102,14 +102,14 @@ export default class ApiModule{
       response.send(result);
     })
 
-    this.app.post('/messages.getlastmessages', async (request, response) =>{
+    this.app.post('/messages.getlastmessages', async (request, response) => {
       let result = await this.messagesGetLastMessages(
         request.body['token'] as string
       );
       response.send(result);
     });
 
-    this.app.post('/messages.getlastmessage', async (request, response) =>{
+    this.app.post('/messages.getlastmessage', async (request, response) => {
       let result = await this.messagesGetLastMessage(
         request.body['token'] as string, 
         request.body['username'] as string
@@ -117,7 +117,14 @@ export default class ApiModule{
       response.send(result);
     });
 
-    this.app.post('/messages.deletehistory', async (request, response) =>{
+    this.app.post('/messages.getlastunreads', async (request, response) => {
+      let result = await this.getLastUnreads(
+        String(request.body['token'])
+      );
+      response.send(result);
+    });
+
+    this.app.post('/messages.deletehistory', async (request, response) => {
       let result = await this.messagesDeleteHistory(
         request.body['token'] as string, 
         request.body['username'] as string
@@ -125,7 +132,7 @@ export default class ApiModule{
       response.send(result);
     });
 
-    this.app.post('/messages.markasread', async (request, response) =>{
+    this.app.post('/messages.markasread', async (request, response) => {
       let result = await this.messagesMarkAsRead(
         request.body['token'] as string, 
         request.body['username'] as string
@@ -199,6 +206,18 @@ export default class ApiModule{
     await this.dbModule.setup();
   }
 
+  async getLastUnreads(token: string) {
+    let response;
+    try {
+      if(!this.dbModule.checkStringToken(token, 'messages.getlastunreads')) throw new ScopeError('Check token scope.');
+      let result = await this.dbModule.getOneMessageFromEveryUnread(await this.dbModule.getUserByToken(token));
+      response = Response.fromSuccessData(result);
+    } catch (error) {
+      response = Response.fromError(error);
+    }
+    return response;
+  }
+
   async getFullInfo(token: string) {
     let response;
     try {
@@ -235,7 +254,7 @@ export default class ApiModule{
       if (!intExpiresIn) {
         intExpiresIn = undefined;
       }
-      console.log(scope, expiresIn, intExpiresIn, intScope);
+      //console.log(scope, expiresIn, intExpiresIn, intScope);
       const data = await this.dbModule.createToken(user, intScope, intExpiresIn);
       response = Response.fromSuccessData(data);
     }catch(error) {
@@ -278,7 +297,7 @@ export default class ApiModule{
         String((await this.dbModule.getUserByUsername(username)).toObject()._id),
         String((await this.dbModule.getUserByToken(token)).toObject()._id)
       );
-      response = Response.fromSuccessData(result)
+      response = Response.fromSuccessData(result);
     } catch(error) {
       console.log(error);
       response = Response.fromError(error);
