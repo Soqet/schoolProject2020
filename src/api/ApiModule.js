@@ -442,11 +442,11 @@ var ApiModule = /** @class */ (function () {
                             throw new Errors_1.ScopeError('Check token scope.');
                         _b = (_a = this.dbModule).getUnreadWithUser;
                         _c = String;
-                        return [4 /*yield*/, this.dbModule.getUserByToken(token)];
+                        return [4 /*yield*/, this.dbModule.getUserByUsername(username)];
                     case 1:
                         _d = [_c.apply(void 0, [(_f.sent()).toObject()._id])];
                         _e = String;
-                        return [4 /*yield*/, this.dbModule.getUserByUsername(username)];
+                        return [4 /*yield*/, this.dbModule.getUserByToken(token)];
                     case 2: return [4 /*yield*/, _b.apply(_a, _d.concat([_e.apply(void 0, [(_f.sent()).toObject()._id])]))];
                     case 3:
                         result = _f.sent();

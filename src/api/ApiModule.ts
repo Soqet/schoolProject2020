@@ -275,8 +275,8 @@ export default class ApiModule{
     try {
       if(!this.dbModule.checkStringToken(token, 'messages.getunread')) throw new ScopeError('Check token scope.');
       const result = await this.dbModule.getUnreadWithUser(
-        String((await this.dbModule.getUserByToken(token)).toObject()._id),
         String((await this.dbModule.getUserByUsername(username)).toObject()._id),
+        String((await this.dbModule.getUserByToken(token)).toObject()._id)
       );
       response = Response.fromSuccessData(result)
     } catch(error) {
